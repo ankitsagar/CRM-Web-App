@@ -1,0 +1,32 @@
+{% extends 'salesman/base.html' %}
+
+{% block content %}
+
+<h1>{{ object.get_full_name }}</h1>
+
+<div class="row">
+	<div class="col-sm-6">
+		<p class="lead">{{ object.email }}<br/>
+			{{ object.phone  }}
+		</p>
+	</div>
+	
+	<div class="col-sm-6">
+		<p class="lead">{% for info in object.customerstatus_set.all %}
+		 <b>Stage: </b>{{ info.stage }}<br/>
+		 <b>Deal: </b>{{ info.deal_size }}
+		 {% endfor %}
+		</p>
+	</div>
+</div>
+
+<table class="table">
+<tr>
+	<td><b>Comapny: </b>{{ object.company_name }}</td>
+	<td><b>Address: </b>{{ object.get_address }}</td>
+	<td><b>Added on: </b>{{ object.created }}</td>
+	<td><b>updated on: </b>{{ object.updated }}</td>
+
+</tr>
+</table>
+{% endblock %}
