@@ -147,7 +147,7 @@
 
 
 {% block content %}
-    <nav class="navbar navbar-default">
+<nav class="navbar navbar-default">
   <div class="container-fluid">
     <!-- Brand and toggle get grouped for better mobile display -->
     <div class="navbar-header">
@@ -164,7 +164,7 @@
 
       <ul class="nav navbar-nav">
         <li><a href="{% url 'salesman:dashboard' %}">Dashboard</a></li>
-        <li><a href="#">Search Lead</a></li>
+        <li><a href="{% url 'salesman:customer_search' %}">Search Lead</a></li>
         <li class="active"><a href="{% url 'salesman:customer_add' %}">Create Lead</a></li>
       </ul>
   </div><!-- /.container-fluid -->
