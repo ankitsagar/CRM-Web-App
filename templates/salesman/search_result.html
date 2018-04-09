@@ -1,0 +1,60 @@
+{% extends 'salesman/base.html' %}
+{% block content %}
+
+{% if customer_status or customer_info %}
+
+    <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Company Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Stage</th>
+            <th>Follow-Up Date</th>
+            <th>Follow-Up Task</th>
+          </tr>
+        </thead>
+        <tbody>
+
+    {% if customer_info %}
+
+            {% for info in customer_info %}
+                <td>{{ info.get_full_name }}</td>
+                <td>{{ info.company_name }}</td>
+                <td>{{ info.email }}</td>
+                <td>{{ info.phone }}</td>
+                {% for status in info.customerstatus_set.all %}
+                    <td>{{ status.stage }}</td>
+                    <td>{{ status.follow_up_date }}</td>
+                    <td>{{ status.follow_up_task }}</td>
+                {% endfor %}
+            {% endfor %}
+
+    {% elif customer_status %}
+        {% for status in customer_status %}
+            <td>{{ status.company_name.get_full_name }}</td>
+            <td>{{ status.company_name }}</td>
+            <td>{{ status.company_name.email }}</td>
+            <td>{{ status.company_name.phone }}</td>
+            <td>{{ status.stage }}</td>
+            <td>{{ status.follow_up_date }}</td>
+            <td>{{ status.follow_up_task }}</td>
+        {% endfor %}
+
+        </tbody>
+    </table>
+    {% endif %}
+
+{% else %}
+    <h1>No customer Found</h1>
+    <p class="lead"><a href="{% url 'salesman:customer_search' %}">Go back to search</a></p>
+
+
+
+
+
+
+{% endif %}
+
+{% endblock %}
