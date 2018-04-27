@@ -17,7 +17,7 @@ from customer.models import CustomerInformation, CustomerStatus
 @method_decorator(check_role('Salesman'), name='dispatch')
 class Dashboard(ListView):
 
-    template_name = 'salesman/customerinformation_list.html'
+    template_name = 'salesman/dashboard.html'
 
     def get_queryset(self):
         return CustomerInformation.objects.filter(added_by=self.request.user)

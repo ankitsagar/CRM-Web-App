@@ -1,37 +1,146 @@
+{% load static %}
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-	<title>CRM</title>
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    {% block head %}
-    {% endblock %}
-    <style>
-         body {
-          {#font-family: "Roboto", Helvetica, Arial, sans-serif;#}
-          {#font-weight: 100;#}
-          {#font-size: 12px;#}
-          line-height: 30px;
-          color: #777;
-          background: #f5f3db;
-        }
-    </style>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>{% block title %} | {% endblock %}CRM</title>
+{#    <link rel="icon" sizes="72x72" href="{% static 'images/favicon.png' %}">#}
+    <link rel="icon" sizes="180x180" href="{% static 'images/favicon180.png' %}">
+    <!-- Icons-->
+    <link href="{% static 'node_modules/flag-icon-css/css/flag-icon.min.css' %}" rel="stylesheet">
+    <link href="{% static 'node_modules/font-awesome/css/font-awesome.min.css' %}" rel="stylesheet">
+    <link href="{% static 'node_modules/simple-line-icons/css/simple-line-icons.css' %}" rel="stylesheet">
+
+    <!-- Main styles for this application-->
+    <link href="{% static 'src/css/style.css' %}" rel="stylesheet">
+    <link href="{% static 'src/vendors/css/pace.min.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'node_modules/bootstrap/dist/bootstrap.min.css' %}">
 
 </head>
 
-<body>
-<div class="container">
+<body class="app header-fixed sidebar-fixed sidebar-lg-show">
 
 
-{% block content %}
+<header class="app-header navbar clearfix">
+    <a class="navbar-brand" href="#">
+        <img class="navbar-brand-full" src="{% static 'images/logo.jpg' %}" width="89" height="25" alt="CRM Logo">
+    </a>
 
-{% endblock %}
+    <ul class="navbar-nav mr-auto float-left">
+        <button class="navbar-toggler sidebar-toggler d-md-down-none" type="button" data-toggle="sidebar-lg-show">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <li class="nav-item px-3">
+            <a class="nav-link" href="#">Dashboard</a>
+        </li>
+        <li class="nav-item px-3">
+            <a class="nav-link" href="#">Customers</a>
+        </li>
+    </ul>
+
+    <ul class="navbar-nav mr-4">
+        <li class="nav-item px-1">
+            <span class="nav-item disabled">{{ user }}({{ user.role }})</span></li>
+        <i class="nav-icon fa fa-circle text-success p-2"></i>
+        <li class="nav-item px-3">
+            <a class="btn btn-danger" href="{% url 'account_logout' %}"> Logout</a></li>
+    </ul>
+
+</header>
+
+<div class="app-body">
+
+    <!--Sidebar-->
+    <div class="sidebar">
+        <nav class="sidebar-nav">
+            <ul class="nav">
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <i class="nav-icon icon-speedometer"></i> Dashboard
+                    </a>
+                </li>
+
+                <li class="nav-item nav-dropdown">
+                    <a class="nav-link nav-dropdown-toggle" href="#">
+                        <i class="nav-icon icon-user"></i> Customer</a>
+
+                    <ul class="nav-dropdown-items">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="nav-icon fa fa-empty"></i> Create Lead</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="nav-icon fa fa-empty"></i> Customer List</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <i class="nav-icon fa fa-list-alt"></i> Task</a>
+                </li>
+
+                <li class="nav-item nav-dropdown">
+                    <a class="nav-link nav-dropdown-toggle" href="#">
+                        <i class="nav-icon icon-user"></i> Opportunity</a>
+
+                    <ul class="nav-dropdown-items">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="nav-icon fa fa-empty"></i> Create</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="nav-icon fa fa-empty"></i> List</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        <i class="nav-icon fa fa-flag"></i> Won/Close Deal</a>
+                </li>
+
+            </ul>
+        </nav>
+    </div>
+    <!--End Sidebar-->
+
+    <main class="main">
+        {% block content %}
+        {% endblock %}
+
+    </main>
+
 
 </div>
 
+<footer class="app-footer">
+    <div>
+        <a href="https://github.com/ankitsagar/CRM-Web-App">CRM APP</a>
+        <span>&copy; 2018</span>
+    </div>
+    <div class="ml-auto">
+        <span>Created by</span>
+        <a href="www.linkedin.com/in/ankit-sagar">Ankit Sagar</a>
+    </div>
+</footer>
 
+
+<script src="{% static 'node_modules/jquery/dist/jquery.min.js' %}"></script>
+<script src="{% static 'node_modules/popper.js/dist/umd/popper.min.js' %}"></script>
+<script src="{% static 'node_modules/bootstrap/dist/js/bootstrap.min.js' %}"></script>
+<script src="{% static 'node_modules/pace-progress/pace.min.js' %}"></script>
+<script src="{% static 'node_modules/perfect-scrollbar/dist/perfect-scrollbar.min.js' %}"></script>
+<script src="{% static 'node_modules/@coreui/coreui/dist/js/coreui.min.js' %}"></script>
+{#     Plugins and scripts required by this view#}
+<script src="{% static 'node_modules/chart.js/dist/Chart.min.js' %}"></script>
+<script src="{% static 'node_modules/@coreui/coreui-plugin-chartjs-custom-tooltips/dist/js/custom-tooltips.min.js' %}"></script>
+<script src="{% static 'js/main.js' %}"></script>
 
 </body>
-</html>
-

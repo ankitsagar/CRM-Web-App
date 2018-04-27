@@ -2,60 +2,7 @@
 
 {% block content %}
 
-<nav class="navbar navbar-default">
-  <div class="container-fluid">
-    <!-- Brand and toggle get grouped for better mobile display -->
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-      <a class="navbar-brand" href="#">CRM</a>
-    </div>
 
-    <!-- Collect the nav links, forms, and other content for toggling -->
-
-      <ul class="nav navbar-nav">
-        <li class="active"><a href="{% url 'salesman:dashboard' %}">Dashboard</a></li>
-        <li><a href="{% url 'salesman:customer_search' %}">Search Lead</a></li>
-        <li><a href="{% url 'salesman:customer_add' %}">Create Lead</a></li>
-      </ul>
-  </div><!-- /.container-fluid -->
-</nav>
-
-<table class="table table-striped">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Company Name</th>
-        <th>Email</th>
-        <th>Phone</th>
-        <th>Stage</th>
-        <th>Follow-Up Date</th>
-        <th>Follow-up Task</th>
-      </tr>
-    </thead>
-    <tbody>
-    {% for customer in object_list %}
-    
-      <tr>
-        <td><a href="{% url 'salesman:customer_detail' pk=customer.id %}">{{ customer.get_full_name }}</a></td>
-{#        <td>{{ customer.get_full_name }}</td>#}
-        <td>{{ customer.company_name }}</td>
-        <td>{{ customer.email }}</td>
-        <td>{{ customer.phone }}</td>
-        <td>{{ customer.company_name }}</td>
-        {% for status in customer.customerstatus_set.all %}
-            <td>{{ status.stage }}</td>
-            <td>{{ status.follow_up_date }}</td>
-            <td>{{ status.follow_up_task }}</td>
-        {% endfor %}
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
 
 
 

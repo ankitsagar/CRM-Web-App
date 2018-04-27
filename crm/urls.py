@@ -13,10 +13,14 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
+
+from django.conf import settings
 from django.conf.urls import url, include
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.core.urlresolvers import reverse_lazy
 from django.views.generic import RedirectView
+
 
 from login.views import verify_login
 # from customer.views import CustomerListView, CustomerDetailView
@@ -36,4 +40,4 @@ urlpatterns = [
     # url(r'^(?P<pk>\d+)/$', CustomerDetailView.as_view(), name="customer_detail"),
     # url(r'^$', CustomerListView.as_view(), name="customer_list"),
 
-]
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
