@@ -35,6 +35,7 @@ urlpatterns = [
 
     url(r'^manager/', include('manager.urls', namespace='manager')),
     url(r'^salesman/', include('salesman.urls', namespace='salesman')),
+    url(r'^customer/', include('customer.urls', namespace='customer')),
 
 
     # url(r'^(?P<pk>\d+)/$', CustomerDetailView.as_view(), name="customer_detail"),
