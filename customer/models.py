@@ -1,28 +1,40 @@
 from django.db import models
 from django.db.models.signals import post_save
-
+from django.utils.text import slugify
 from login.models import User
 # Create your models here.
 
 
 class CompanyDetails(models.Model):
     company_name = models.CharField(max_length=120, unique=True)
-    phone_no_1 = models.CharField(max_length=13)
-    phone_no_2 = models.CharField(max_length=13, null=True, blank=True)
+    phone_no_1 = models.IntegerField()
+    phone_no_2 = models.IntegerField(null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
     website = models.CharField(max_length=120, null=True, blank=True)
-
+    slug = models.SlugField(editable=False, unique=True)
     added_by = models.ForeignKey(User, null=True)
     street = models.CharField(max_length=120)
     city = models.CharField(max_length=120)
     state = models.CharField(max_length=120)
-    zip_code = models.CharField(max_length=120)
+    zip_code = models.IntegerField()
     country = models.CharField(max_length=120)
     created = models.DateField(auto_now_add=True, auto_now=False)
     updated = models.DateField(auto_now_add=False, auto_now=True)
 
+    def save(self, **kwargs):
+        self.slug = slugify(self.company_name)
+        super(CompanyDetails, self).save(**kwargs)
+
     def __str__(self):
         return self.company_name
+
+
+STAGES = (
+    (1, 'Initial'),  # Lead
+    (2, 'Qualification'),  # Opportunity
+    (3, 'Closing'),  # Won
+    (0, 'Not Qualified'),  # Archive
+)
 
 
 class Contact(models.Model):
@@ -31,7 +43,7 @@ class Contact(models.Model):
     last_name = models.CharField(max_length=120)
     phone = models.CharField(max_length=13)
     email = models.EmailField()
-
+    stage = models.IntegerField(choices=STAGES, default=1)
     added_by = models.ForeignKey(User, null=True)
     street = models.CharField(max_length=120)
     city = models.CharField(max_length=120)
@@ -39,6 +51,7 @@ class Contact(models.Model):
     zip_code = models.CharField(max_length=120)
     created = models.DateField(auto_now_add=True, auto_now=False)
     updated = models.DateField(auto_now_add=False, auto_now=True)
+    deal_size = models.DecimalField(max_digits=50, decimal_places=2, blank=True, null=True)
 
     def __str__(self):
         return self.company
@@ -47,23 +60,15 @@ class Contact(models.Model):
         return "%s, %s, %s, %s" % (self.street, self.city, self.state, self.zip_code)
 
 
-STAGES = (
-    ('Initial', 'Initial'),
-    ('Qualification', 'Qualification'),
-    ('Closing', 'Closing'),
-    ('Not Qualified', 'Not Qualified'),
-)
-
-
-class Status(models.Model):
+class Task(models.Model):
     contact = models.ForeignKey(Contact)
-    stage = models.CharField(max_length=120, choices=STAGES, default='Initial')
-    deal_size = models.DecimalField(max_digits=50, decimal_places=2, blank=True, null=True)
-    follow_up_task = models.CharField(max_length=120, blank=True, null=True)
-    follow_up_date = models.DateField(null=True, blank=True)
+    task = models.CharField(max_length=120)
+    due_date = models.DateField()
+    task_status = models.BooleanField(default=False)
+    task_description = models.CharField(max_length=200, null=True, blank=True)
 
     def __str__(self):
-        return str(self.contact.phone)
+        return self.contact
 
 
 # def save_customerstatus(sender, instance, *args, **kwargs):
@@ -77,3 +82,10 @@ class Status(models.Model):
 #
 #
 # post_save.connect(save_customerstatus, sender=CustomerInformation)
+
+
+# class Status(models.Model):
+#     contact = models.ForeignKey(Contact)
+#
+#     def __str__(self):
+#         return str(self.contact.phone)

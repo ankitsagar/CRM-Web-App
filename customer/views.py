@@ -5,10 +5,84 @@ from django.views.generic.base import View
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.http import HttpResponseRedirect, Http404
+from django.contrib import messages
 from django.utils.decorators import method_decorator
-# from .models import CustomerInformation, CustomerStatus
-#
-#
+from .models import *
+from django.contrib.messages import constants as message_constants
+MESSAGE_TAGS = {message_constants.ERROR: 'danger'}
+
+
+def add_company(request):
+    if request.user.role == 'Salesman':
+        template = 'salesman/add-company.html'
+    elif request.user.role == 'Owner':
+        template = 'owner/add-company.html'
+    else:
+        raise Http404
+
+    company_name = request.POST.get('company')
+    street = request.POST.get('street')
+    postal_code = request.POST.get('postal_code')
+    city = request.POST.get('city')
+    state = request.POST.get('state')
+    country = request.POST.get('country')
+
+    phone_1 = request.POST.get('phone_1')
+    phone_2 = request.POST.get('phone_2')
+    if not phone_2:
+        phone_2 = None
+
+    email = request.POST.get('email')
+    website = request.POST.get('website')
+
+    if company_name and street and postal_code and city and state and country and phone_1:
+        if not CompanyDetails.objects.filter(company_name=company_name).exists():
+            CompanyDetails.objects.create(company_name=company_name, street=street, zip_code=postal_code, city=city,
+                                          state=state, country=country, phone_no_1=phone_1, phone_no_2=phone_2,
+                                          email=email, website=website, added_by=request.user)
+            messages.success(request, 'Company Successfully Added')
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        else:
+            # message_constants.ERROR(request, 'Company Already Exist!')
+            messages.error(request, 'Company Already Exist!', extra_tags='danger')
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+    return render(request, template)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # @method_decorator(login_required, name='dispatch')
 # class AddCustomer(View):
 #     template_name = 'salesman/form.html'
