@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>{% block title %} | {% endblock %}CRM</title>
-{#    <link rel="icon" sizes="72x72" href="{% static 'images/favicon.png' %}">#}
+    {#    <link rel="icon" sizes="72x72" href="{% static 'images/favicon.png' %}">#}
     <link rel="icon" sizes="180x180" href="{% static 'images/favicon180.png' %}">
     <!-- Icons-->
     <link href="{% static 'node_modules/flag-icon-css/css/flag-icon.min.css' %}" rel="stylesheet">
@@ -17,7 +17,32 @@
     <!-- Main styles for this application-->
     <link href="{% static 'src/css/style.css' %}" rel="stylesheet">
     <link href="{% static 'src/vendors/css/pace.min.css' %}" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'node_modules/bootstrap/dist/bootstrap.min.css' %}">
+    <style>
+        [data-notify="progressbar"] {
+            margin-bottom: 0px;
+            position: absolute;
+            bottom: 0px;
+            left: 0px;
+            width: 100%;
+            height: 5px;
+        }
+
+        #loading {
+            position: fixed;
+            top: 0px;
+            right: 0px;
+            width: 100%;
+            height: 100%;
+            background-color: #666;
+            background-image: url("{% static 'images/loading.gif' %}");
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: 10000000;
+            opacity: .9;
+            filter: alpha(opacity=40); /* For IE8 and earlier */
+        }
+    </style>
+    {#    <link href="{% static 'node_modules/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet">#}
 
 </head>
 
@@ -52,6 +77,8 @@
 </header>
 
 <div class="app-body">
+    <div id="loading">
+    </div>
 
     <!--Sidebar-->
     <div class="sidebar">
@@ -70,7 +97,7 @@
 
                     <ul class="nav-dropdown-items">
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'customer:add-customer' %}">
+                            <a class="nav-link" href="{% url 'customer:add-company' %}">
                                 <i class="nav-icon fa fa-empty"></i> Add Company</a>
                         </li>
                         <li class="nav-item">
@@ -86,7 +113,7 @@
 
                     <ul class="nav-dropdown-items">
                         <li class="nav-item">
-                            <a class="nav-link" href="#">
+                            <a class="nav-link" href="{% url 'customer:add-contact' %}">
                                 <i class="nav-icon fa fa-empty"></i> Create Lead</a>
                         </li>
                         <li class="nav-item">
@@ -112,21 +139,21 @@
                     </ul>
                 </li>
 
-                <li class="nav-item nav-dropdown">
-                    <a class="nav-link nav-dropdown-toggle" href="#">
-                        <i class="nav-icon icon-user"></i> Opportunity</a>
-
-                    <ul class="nav-dropdown-items">
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="nav-icon fa fa-empty"></i> Create Opportunity</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="nav-icon fa fa-empty"></i> Opportunity List</a>
-                        </li>
-                    </ul>
-                </li>
+                {#                <li class="nav-item nav-dropdown">#}
+                {#                    <a class="nav-link nav-dropdown-toggle" href="#">#}
+                {#                        <i class="nav-icon icon-user"></i> Opportunity</a>#}
+                {##}
+                {#                    <ul class="nav-dropdown-items">#}
+                {#                        <li class="nav-item">#}
+                {#                            <a class="nav-link" href="{% url 'customer:add-contact'%}?type=opportunity">#}
+                {#                                <i class="nav-icon fa fa-empty"></i> Create Opportunity</a>#}
+                {#                        </li>#}
+                {#                        <li class="nav-item">#}
+                {#                            <a class="nav-link" href="#">#}
+                {#                                <i class="nav-icon fa fa-empty"></i> Opportunity List</a>#}
+                {#                        </li>#}
+                {#                    </ul>#}
+                {#                </li>#}
 
                 <li class="nav-item">
                     <a class="nav-link" href="#">
@@ -175,6 +202,33 @@
 {#     Plugins and scripts required by this view#}
 <script src="{% static 'node_modules/chart.js/dist/Chart.min.js' %}"></script>
 <script src="{% static 'node_modules/@coreui/coreui-plugin-chartjs-custom-tooltips/dist/js/custom-tooltips.min.js' %}"></script>
-<script src="{% static 'js/main.js' %}"></script>
+<script src="{% static 'src/js/main.js' %}"></script>
+<script src="{% static 'node_modules/bootstrap-notify.js' %}"></script>
+<script src="{% static 'node_modules/bootstrap-notify.min.js' %}"></script>
+
+{% block script %}{% endblock %}
+
+<script>
+    function showFlashMessage(msg, type) {
+        $.notify(msg, {
+            animate: {
+                enter: 'animated fadeInRight',
+                exit: 'animated fadeOutRight'
+            },
+            offset: {
+                x: 30,
+                y: 70
+            },
+            type : type
+        });
+    }
+
+    $(document).ready(function () {
+        // PAGE IS FULLY LOADED
+        // FADE OUT YOUR OVERLAYING DIV
+        $('#loading').fadeOut();
+    });
+</script>
 
 </body>
+</html>

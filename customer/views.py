@@ -4,12 +4,11 @@ from django.contrib.auth.decorators import login_required
 from django.views.generic.base import View
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
-from django.http import HttpResponseRedirect, Http404
+from django.http import HttpResponseRedirect, Http404, JsonResponse
 from django.contrib import messages
 from django.utils.decorators import method_decorator
 from .models import *
-from django.contrib.messages import constants as message_constants
-MESSAGE_TAGS = {message_constants.ERROR: 'danger'}
+from django.views.generic.base import TemplateResponseMixin, ContextMixin
 
 
 def add_company(request):
@@ -36,52 +35,101 @@ def add_company(request):
     website = request.POST.get('website')
 
     if company_name and street and postal_code and city and state and country and phone_1:
-        if not CompanyDetails.objects.filter(company_name=company_name).exists():
-            CompanyDetails.objects.create(company_name=company_name, street=street, zip_code=postal_code, city=city,
-                                          state=state, country=country, phone_no_1=phone_1, phone_no_2=phone_2,
-                                          email=email, website=website, added_by=request.user)
+        if not CompanyDetails.objects.filter(
+                company_name=company_name).exists():
+            CompanyDetails.objects.create(company_name=company_name,
+                                          street=street, zip_code=postal_code,
+                                          city=city, state=state,
+                                          country=country, phone_no_1=phone_1,
+                                          phone_no_2=phone_2,
+                                          email=email, website=website,
+                                          added_by=request.user)
             messages.success(request, 'Company Successfully Added')
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
         else:
-            # message_constants.ERROR(request, 'Company Already Exist!')
-            messages.error(request, 'Company Already Exist!', extra_tags='danger')
+            messages.error(request, 'Company Already Exist!',
+                           extra_tags='danger')
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
     return render(request, template)
 
 
+class CreateContact(TemplateResponseMixin, ContextMixin, View):
 
+    def get_template_names(self):
+        if self.request.user.role == "Salesman":
+            return ['salesman/add-contact.html']
+        elif self.request.user.role == "Manager":
+            return ["manager/add-contact.html"]
+        else:
+            raise Http404
 
+    def get(self, request, *args, **kwargs):
 
+        context = self.get_context_data(**kwargs)
+        context['companies'] = CompanyDetails.objects.all()
 
+        if request.is_ajax():
+            phone = request.GET.get('phone')
+            task = request.GET.get('task')
+            due_date = request.GET.get('due_date')
+            task_description = request.GET.get('task_description')
+            task_status = request.GET.get('task_status')
+            if task_status == 'true':
+                task_status = True
+            else:
+                task_status = False
 
+            contact = Contact.objects.get(phone=phone)
 
+            if task and due_date:
+                Task.objects.create(contact=contact, task=task,
+                                    due_date=due_date, task_status=task_status,
+                                    task_description=task_description)
+                message = 'Task successfully added for customer'
 
+                return JsonResponse({'message': message})
+        return render(request, self.get_template_names(), context)
 
+    def post(self, request, **kwargs):
+        # print('got request')
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        company = request.POST.get('company')
+        stage = request.POST.get('stage')
+        deal_size = request.POST.get('deal_size')
+        phone = request.POST.get('phone')
+        email = request.POST.get('email')
+        street = request.POST.get('street')
+        city = request.POST.get('city')
+        state = request.POST.get('state')
+        postal_code = request.POST.get('postal_code')
 
+        if Contact.objects.filter(phone=phone).exists():
+            message = 'Customer with this phone no. already exist!'
+            return JsonResponse({'message': message})
 
+        elif first_name and last_name and company and phone:
+            company = CompanyDetails.objects.get(company_name=company)
+            contact = Contact.objects.create(first_name=first_name,
+                                             last_name=last_name,
+                                             company=company, stage=stage,
+                                             phone=phone, street=street,
+                                             email=email, city=city,
+                                             state=state, added_by=request.user)
+            if deal_size:
+                contact.deal_size = deal_size
 
+            if postal_code:
+                contact.zip_code = postal_code
 
+            contact.save()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            message = 'Contact successfully saved'
+            return JsonResponse({'message': message})
+        else:
+            message = 'Please fill required fields!!'
+            return JsonResponse({'message': message})
 
 # @method_decorator(login_required, name='dispatch')
 # class AddCustomer(View):

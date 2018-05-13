@@ -1,0 +1,329 @@
+{% extends 'salesman/base.html' %}
+{% load static %}
+
+{% block content %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} bg-{{ message.tags }}">
+                <!-- singular -->
+                <a class="close" data-dismiss="alert">×</a>
+                {{ message|safe }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    <div class="row">
+        <!-- Contact Detail -->
+        <div class="col-sm-7">
+            <div class="card card-accent-danger my-4" id="details">
+
+                <div class="card-header">
+                    <strong>Add Contact</strong>
+                </div>
+                <div class="card-body">
+                    {#                    <form method="post" class="form-group"> {% csrf_token %}#}
+                    <div class="form-group row">
+
+                        <label class="col-sm-2 col-form-label">Name *</label>
+
+                        <div class="form-group col-sm-5">
+
+                            <input type="text" class="form-control"
+                                   name="first_name" id="first-name"
+                                   placeholder="First Name" required>
+                        </div>
+
+                        <div class="form-group col-sm-5">
+                            <input type="text" class="form-control"
+                                   name="last_name" id="last-name"
+                                   placeholder="Last Name" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-2 col-form-label">Company *</label>
+                        <div class="col-md-10">
+                            <select class="form-control" name="company"
+                                    id="company">
+                                <option value="">-------select---------</option>
+                                {% for company in companies %}
+                                    <option value="{{ company.company_name }}">{{ company.company_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-2 col-form-label">Status *</label>
+                        <div class="col-md-10">
+                            <select class="form-control" name="stage"
+                                    id="stage">
+                                <option value="">----Select----</option>
+                                <option value="1">Initial</option>
+                                <option value="2">Qualified</option>
+
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-2 col-form-label">Deal Size</label>
+                        <div class="col-sm-10">
+                            <input type="number" class="form-control"
+                                   name="deal_size" id="deal-size"
+                                   placeholder="Deal Size">
+                        </div>
+                    </div>
+
+                    <div class="from-group row">
+
+                        <label class="col-sm-2 col-form-label">Phone *</label>
+                        <div class="form-group col-sm-4">
+                            <input type="number" class="form-control"
+                                   name="phone" id="phone" placeholder="Phone"
+                                   required>
+                        </div>
+                        <label class="col-sm-2 col-form-label">Email</label>
+
+                        <div class="form-group col-sm-4">
+                            <input type="email" class="form-control"
+                                   name="email" id="email" placeholder="Email">
+                        </div>
+
+                    </div>
+
+                    <div class="from-group row">
+                        <label class="col-sm-2 col-form-label">Address</label>
+                        <div class="form-group col-sm-10">
+                            <input type="text" class="form-control"
+                                   name="street" id="street"
+                                   placeholder="Street">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <label class="col-sm-2 col-form-label"></label>
+                        <div class="form-group col-sm-3">
+                            <input type="text" class="form-control" name="city"
+                                   id="city" placeholder="City">
+                        </div>
+
+                        <div class="form-group col-sm-3">
+                            <input type="text" class="form-control" name="state"
+                                   id="state" placeholder="State">
+                        </div>
+
+                        <div class="form-group col-sm-4">
+                            <input type="text" class="form-control"
+                                   name="postal_code" id="postal"
+                                   pattern="[0-9]{6}"
+                                   maxlength="6" placeholder="Postal Code">
+                        </div>
+                    </div>
+
+                    <button type="submit" id="add-contact"
+                            class="btn btn-block btn-success">Add Contact
+                    </button>
+
+                    {#                    </form>#}
+                </div>
+            </div>
+        </div>
+        <!-- End Contact Detail -->
+
+        <!-- TASK -->
+        <div class="col-sm-5 my-4">
+            <div class="card card-accent-info">
+                <div class="card-header">Task Details</div>
+
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Task *</label>
+                        <input type="text" class="form-control" name="task" id="task">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Due Date *</label>
+                        <input type="date" class="form-control" name="due_date" id="due-date">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Task Description</label>
+                        <textarea rows="5" class="form-control" id="task-description"
+                                  name="task_desc"></textarea>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Completed</label>
+                        <div class="form-check checkbox col-form-label">
+                            <input class="form-check-input" type="checkbox" id="task-status">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="form-control btn btn-primary" id="create-task">
+                        Create Task
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+        <!-- END TASK -->
+    </div>
+
+
+
+{% endblock %}
+
+{#<script src="{% static 'node_modules/jquery/dist/jquery.min.js' %}"></script>#}
+{#    <script src="{% static 'node_modules/popper.js/dist/umd/popper.min.js' %}"></script>#}
+{#    <script src="{% static 'node_modules/bootstrap/dist/js/bootstrap.min.js' %}"></script>#}
+{#    <script src="{% static 'node_modules/pace-progress/pace.min.js' %}"></script>#}
+{#    <script src="{% static 'node_modules/perfect-scrollbar/dist/perfect-scrollbar.min.js' %}"></script>#}
+{#    <script src="{% static 'node_modules/@coreui/coreui/dist/js/coreui.min.js' %}"></script>#}
+{#     Plugins and scripts required by this view#}
+{#    <script src="{% static 'node_modules/chart.js/dist/Chart.min.js' %}"></script>#}
+{#    <script src="{% static 'node_modules/@coreui/coreui-plugin-chartjs-custom-tooltips/dist/js/custom-tooltips.min.js' %}"></script>#}
+{#    <script src="{% static 'src/js/main.js' %}"></script>#}
+{% block script %}
+    <script>
+
+        $('#add-contact').click(function () {
+
+            var first_name = $('#first-name').val();
+            var last_name = $('#last-name').val();
+            var company = $('#company').val();
+            var stage = $('#stage').val();
+            var deal_size = $('#deal-size').val();
+            var phone = $('#phone').val();
+            var email = $('#email').val();
+            var street = $('#street').val();
+            var city = $('#city').val();
+            var state = $('#state').val();
+            var postal_code = $('#postal').val();
+
+            data_values = {
+                'first_name': first_name,
+                'last_name': last_name,
+                'company': company,
+                'stage': stage,
+                'deal_size': deal_size,
+                'phone': phone,
+                'email': email,
+                'street': street,
+                'city': city,
+                'state': state,
+                'postal_code': postal_code,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            };
+            console.log(data_values)
+            console.log(company)
+            if (first_name == "" || last_name == "" || company == "" || stage == "" || phone == "") {
+                alert('Please fill the required fields')
+            }
+            else {
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'customer:add-contact' %}",
+                    data: data_values,
+
+                    beforeSend: function () {
+                        $('#loading').fadeIn();
+                    },
+
+                    success: function (data) {
+
+                        if (data.message === "Contact successfully saved"){
+
+                            $('#add-contact').fadeOut();
+                            $('#details :input').prop('disabled', true);
+                            showFlashMessage(data.message, 'success');
+                            $('#loading').fadeOut();
+
+                        }
+                        else {
+                            showFlashMessage(data.message, 'danger');
+                            $('#loading').fadeOut();
+                        }
+
+                    },
+                    error: function () {
+                        $('#loading').fadeOut();
+                    }
+
+                })
+            }
+
+        });
+
+        $('#create-task').click(function () {
+
+            if ($('#task-status').is(":checked")){
+                var task_status = true
+            }else{
+                var task_status = false
+            }
+
+            var task = $('#task').val();
+            var due_date = $('#due-date').val();
+            var task_description = $('#task-description').val();
+
+            if(!$('#details :input').prop('disabled')){
+                showFlashMessage('Please create contact first', 'danger');
+            } else if(task === '' || due_date === ''){
+                showFlashMessage('Please fill required fields', 'danger');
+            }
+            else{
+                var phone = $('#phone').val();
+
+                $.ajax({
+                    type: 'GET',
+                    url: "{% url 'customer:add-contact' %}",
+                    data: {
+                        'phone':phone,
+                        'task': task,
+                        'due_date': due_date,
+                        'task_description': task_description,
+                        'task_status': task_status
+                    },
+
+                    beforeSend: function () {
+                        $('#loading').fadeIn();
+                    },
+
+                    success: function (data) {
+                        showFlashMessage(data.message, 'success');
+                        $('#create-task').fadeOut();
+
+                        // todo: redirect to customer detail page
+
+                        $('#loading').fadeOut();
+                    },
+                    error: function () {
+                        showFlashMessage('Some error occurred', 'danger');
+                        $('#loading').fadeOut();
+                    }
+
+                })
+            }
+        })
+
+
+
+    </script>
+
+
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
