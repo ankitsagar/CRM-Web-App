@@ -53,11 +53,14 @@ class Contact(models.Model):
     updated = models.DateField(auto_now_add=False, auto_now=True)
     deal_size = models.DecimalField(max_digits=50, decimal_places=2, blank=True, null=True)
 
+    def get_full_name(self):
+        return "%s %s" % (self.first_name, self.last_name)
+
     def __str__(self):
         return self.company
 
     def get_address(self):
-        return "%s, %s, %s, %s" % (self.street, self.city, self.state, self.zip_code)
+        return "%s, %s, %s - %s" % (self.street, self.city, self.state, self.zip_code)
 
 
 class Task(models.Model):

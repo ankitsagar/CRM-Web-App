@@ -5,6 +5,7 @@ from .views import *
 urlpatterns = [
     url(r'^add-company/$', add_company, name='add-company'),
     url(r'^add-contact/$', CreateContact.as_view(), name='add-contact'),
+    url(r'^add-task/$', add_task, name='add-task'),
     # url(r'^customer/search/$', CustomerSearchView.as_view(), name='customer_search'),
 
 ]

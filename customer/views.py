@@ -92,7 +92,7 @@ class CreateContact(TemplateResponseMixin, ContextMixin, View):
         return render(request, self.get_template_names(), context)
 
     def post(self, request, **kwargs):
-        # print('got request')
+
         first_name = request.POST.get('first_name')
         last_name = request.POST.get('last_name')
         company = request.POST.get('company')
@@ -130,6 +130,76 @@ class CreateContact(TemplateResponseMixin, ContextMixin, View):
         else:
             message = 'Please fill required fields!!'
             return JsonResponse({'message': message})
+
+
+def add_task(request, **kwargs):
+    template = 'salesman/add-task.html'
+    contacts = Contact.objects.all().exclude(stage=0)
+    context = {
+        'contacts': contacts
+    }
+    if request.is_ajax():
+        contact_phone = request.GET.get('contact_phone')
+
+        phone = request.POST.get('phone')
+        due_date = request.POST.get('due_date')
+        task_description = request.POST.get('task_description')
+        task_status = request.POST.get('task_status')
+        task = request.POST.get('task')
+
+        if contact_phone:
+            contact = Contact.objects.get(phone=contact_phone)
+            name = contact.get_full_name()
+            company = contact.company.company_name
+            address = contact.get_address()
+            data = {
+                'name': name,
+                'company': company,
+                'address': address,
+            }
+
+            return JsonResponse(data)
+        if phone and task and due_date:
+            customer = Contact.objects.get(phone=phone)
+            task_obj = Task.objects.create(contact=customer, task=task,
+                                           due_date=due_date,
+                                           task_description=task_description)
+            if task_status == 'true':
+                task_obj.task_status = True
+                task_obj.save()
+
+            return JsonResponse({'message': 'Task successfully created'})
+
+    return render(request, template, context)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # @method_decorator(login_required, name='dispatch')
 # class AddCustomer(View):

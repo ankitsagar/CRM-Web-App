@@ -1,0 +1,194 @@
+{% extends 'salesman/base.html' %}
+{% load static %}
+
+{% block content %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} bg-{{ message.tags }}">
+                <!-- singular -->
+                <a class="close" data-dismiss="alert">×</a>
+                {{ message|safe }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    <div class="row">
+
+        <div class="col-sm-8 my-4">
+            <div class="card card-accent-info" id="task-details">
+                <div class="card-header">Task Details</div>
+
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Task *</label>
+                        <input type="text" class="form-control" name="task"
+                               id="task">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Due Date *</label>
+                        <input type="date" class="form-control" name="due_date"
+                               id="due-date">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Task Description</label>
+                        <textarea rows="5" class="form-control"
+                                  id="task-description"
+                                  name="task_desc"></textarea>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-2 col-form-label">Completed</label>
+                        <div class="form-check checkbox col-form-label">
+                            <input class="form-check-input" type="checkbox"
+                                   id="task-status">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="form-control btn btn-primary"
+                            id="create-task">
+                        Create Task
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+        <div class="col-sm-4 my-4">
+            <div class="card card-accent-danger" id="details">
+
+                <div class="card-header">
+                    <strong>Add Contact</strong>
+                </div>
+                <div class="card-body">
+                    <label id="selector-label">Select Contact</label>
+                    <select class="form-control" id="contact-selector">
+                        <option value="">----select----</option>
+                        {% for contact in contacts %}
+                            <option value={{ contact.phone }}>{{ contact.get_full_name }}</option>
+                        {% endfor %}
+                    </select>
+                    <table class="table table-borderless" id="contact-table"></table>
+
+                </div>
+
+                <div class="card-footer">
+                    <button type="submit" id="select-contact"
+                            class="btn btn-square btn-md btn-primary mr-2">
+                        <i class="fa fa-dot-circle-o"></i>
+                        Select
+                    </button>
+
+                    <button type="reset" id="reset-contact"
+                            class="btn btn-square btn-md btn-danger ml-2">
+                        <i class="fa fa-ban"></i>
+                        Reset
+                    </button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}
+
+{% block script %}
+    <script>
+        $('#select-contact').click(function () {
+            var contact_phone = $('#contact-selector').val();
+            if (contact_phone === '') {
+                showFlashMessage('Please select a customer', 'danger');
+            } else {
+                $.ajax({
+                    type: 'GET',
+                    url: "{% url 'customer:add-task' %}",
+                    data: {
+                        'contact_phone': contact_phone
+                    },
+                    beforeSend: function () {
+                        $('#loading').fadeIn();
+                    },
+                    success: function (data) {
+                        var table = '<tr><th>Name</th><td>: <span>' + data.name +
+                            '</span></td></tr><tr><th>company</th><td>: <span>' +
+                            data.company + '</span></td></tr><tr><th>Phone</th>' +
+                            '<td>: <span>' + contact_phone + '</span></td></tr>' +
+                            '<tr><th>Address</th><td>: <span>' + data.address +
+                            '</span></td></tr>';
+                        $('#contact-selector').fadeOut();
+                        $('#selector-label').fadeOut();
+                        $('#contact-table').append(table);
+                        $('#loading').fadeOut();
+                    },
+                    error: function () {
+                        $('#loading').fadeOut();
+                    }
+                })
+            }
+        });
+
+        $('#reset-contact').click(function () {
+            $('#contact-table').empty();
+            $('#selector-label').fadeIn();
+            $('#contact-selector').fadeIn();
+        });
+
+
+        $('#create-task').click(function () {
+            if ($('#task-status').is(":checked")) {
+                var task_status = true
+            } else {
+                var task_status = false
+            }
+
+            var task = $('#task').val();
+            var due_date = $('#due-date').val();
+            var task_description = $('#task-description').val();
+
+            if ($('#contact-table').is(':empty')){
+                showFlashMessage('Please select the contact first', 'danger');
+            } else if(task === ''|| due_date === ''){
+                showFlashMessage('Fill the required fields', 'danger');
+            } else {
+                $.ajax({
+                    type:'POST',
+                    url: "{% url 'customer:add-task' %}",
+                    data: {
+                        'task': task,
+                        'due_date': due_date,
+                        'task_description': task_description,
+                        'task_status': task_status,
+                        'phone': $('#contact-selector').val(),
+                        csrfmiddlewaretoken: '{{ csrf_token }}',
+
+                    },
+                    beforeSend: function () {
+                        $('#loading').fadeIn();
+                    },
+                    success: function (data) {
+                        if (data.message === 'Task successfully created'){
+                            $('#task-details :input').prop('disabled', true)
+                            $('#create-task').fadeOut();
+                            $('#loading').fadeOut();
+                            $('.card-footer').fadeOut();
+                            // todo redirect to task detail page
+                            showFlashMessage(data.message, 'success')
+                        }
+                        $('#loading').fadeOut();
+                    },
+                    error: function () {
+                        $('#loading').fadeOut();
+                    }
+                });
+            }
+        });
+    </script>
+
+{% endblock %}
+
+
+
+
+
+

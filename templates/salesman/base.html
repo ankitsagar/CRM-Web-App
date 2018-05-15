@@ -9,6 +9,7 @@
     <title>{% block title %} | {% endblock %}CRM</title>
     {#    <link rel="icon" sizes="72x72" href="{% static 'images/favicon.png' %}">#}
     <link rel="icon" sizes="180x180" href="{% static 'images/favicon180.png' %}">
+    <link href="{% static 'node_modules/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet">
     <!-- Icons-->
     <link href="{% static 'node_modules/flag-icon-css/css/flag-icon.min.css' %}" rel="stylesheet">
     <link href="{% static 'node_modules/font-awesome/css/font-awesome.min.css' %}" rel="stylesheet">
@@ -129,7 +130,7 @@
 
                     <ul class="nav-dropdown-items">
                         <li class="nav-item">
-                            <a class="nav-link" href="#">
+                            <a class="nav-link" href="{% url 'customer:add-task' %}">
                                 <i class="nav-icon fa fa-empty"></i> Add Task</a>
                         </li>
                         <li class="nav-item">
