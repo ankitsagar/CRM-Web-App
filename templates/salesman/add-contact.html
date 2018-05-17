@@ -96,7 +96,7 @@
                         <div class="form-group col-sm-10">
                             <input type="text" class="form-control"
                                    name="street" id="street"
-                                   placeholder="Street">
+                                   placeholder="Street" required>
                         </div>
                     </div>
 
@@ -104,25 +104,29 @@
                         <label class="col-sm-2 col-form-label"></label>
                         <div class="form-group col-sm-3">
                             <input type="text" class="form-control" name="city"
-                                   id="city" placeholder="City">
+                                   id="city" placeholder="City" required>
                         </div>
 
                         <div class="form-group col-sm-3">
                             <input type="text" class="form-control" name="state"
-                                   id="state" placeholder="State">
+                                   id="state" placeholder="State" required>
                         </div>
 
                         <div class="form-group col-sm-4">
                             <input type="text" class="form-control"
                                    name="postal_code" id="postal"
                                    pattern="[0-9]{6}"
-                                   maxlength="6" placeholder="Postal Code">
+                                   maxlength="6" placeholder="Postal Code"
+                                   required>
                         </div>
                     </div>
 
                     <button type="submit" id="add-contact"
                             class="btn btn-block btn-success">Add Contact
                     </button>
+                    <a id="contact-profile"
+                       class="text-white btn btn-block btn-primary">
+                       GO To Customer Profile Page</a>
 
                     {#                    </form>#}
                 </div>
@@ -138,28 +142,37 @@
                 <div class="card-body">
                     <div class="form-group">
                         <label>Task *</label>
-                        <input type="text" class="form-control" name="task" id="task">
+                        <input type="text" class="form-control" name="task"
+                               id="task">
                     </div>
 
                     <div class="form-group">
                         <label>Due Date *</label>
-                        <input type="date" class="form-control" name="due_date" id="due-date">
+                        <input type="date" class="form-control" name="due_date"
+                               id="due-date">
                     </div>
 
                     <div class="form-group">
                         <label>Task Description</label>
-                        <textarea rows="5" class="form-control" id="task-description"
+                        <textarea rows="5" class="form-control"
+                                  id="task-description"
                                   name="task_desc"></textarea>
                     </div>
 
                     <div class="form-group row">
-                        <label class="col-sm-4 col-form-label">Completed</label>
-                        <div class="form-check checkbox col-form-label">
-                            <input class="form-check-input" type="checkbox" id="task-status">
+                        <label class="col-sm-3 col-form-label">Task
+                            Status</label>
+                        <div class="col-form-label">
+                            <select class="form-control" id="task-status">
+                                <option value="">----select----</option>
+                                <option value='0'>Pending</option>
+                                <option value='1'>Completed</option>
+                            </select>
                         </div>
                     </div>
 
-                    <button type="submit" class="form-control btn btn-primary" id="create-task">
+                    <button type="submit" class="form-control btn btn-primary"
+                            id="create-task">
                         Create Task
                     </button>
                 </div>
@@ -174,18 +187,9 @@
 
 {% endblock %}
 
-{#<script src="{% static 'node_modules/jquery/dist/jquery.min.js' %}"></script>#}
-{#    <script src="{% static 'node_modules/popper.js/dist/umd/popper.min.js' %}"></script>#}
-{#    <script src="{% static 'node_modules/bootstrap/dist/js/bootstrap.min.js' %}"></script>#}
-{#    <script src="{% static 'node_modules/pace-progress/pace.min.js' %}"></script>#}
-{#    <script src="{% static 'node_modules/perfect-scrollbar/dist/perfect-scrollbar.min.js' %}"></script>#}
-{#    <script src="{% static 'node_modules/@coreui/coreui/dist/js/coreui.min.js' %}"></script>#}
-{#     Plugins and scripts required by this view#}
-{#    <script src="{% static 'node_modules/chart.js/dist/Chart.min.js' %}"></script>#}
-{#    <script src="{% static 'node_modules/@coreui/coreui-plugin-chartjs-custom-tooltips/dist/js/custom-tooltips.min.js' %}"></script>#}
-{#    <script src="{% static 'src/js/main.js' %}"></script>#}
 {% block script %}
     <script>
+        $('#contact-profile').fadeOut()
 
         $('#add-contact').click(function () {
 
@@ -232,9 +236,11 @@
 
                     success: function (data) {
 
-                        if (data.message === "Contact successfully saved"){
-
+                        if (data.message === "Contact successfully saved") {
+                            var link = "/customer/contact/" + data.id;
                             $('#add-contact').fadeOut();
+                            $('#contact-profile').attr('href', link);
+                            $('#contact-profile').fadeIn();
                             $('#details :input').prop('disabled', true);
                             showFlashMessage(data.message, 'success');
                             $('#loading').fadeOut();
@@ -257,29 +263,24 @@
 
         $('#create-task').click(function () {
 
-            if ($('#task-status').is(":checked")){
-                var task_status = true
-            }else{
-                var task_status = false
-            }
-
             var task = $('#task').val();
             var due_date = $('#due-date').val();
             var task_description = $('#task-description').val();
+            var task_status = $('#task-status').val()
 
-            if(!$('#details :input').prop('disabled')){
+            if (!$('#details :input').prop('disabled')) {
                 showFlashMessage('Please create contact first', 'danger');
-            } else if(task === '' || due_date === ''){
+            } else if (task === '' || due_date === '') {
                 showFlashMessage('Please fill required fields', 'danger');
             }
-            else{
+            else {
                 var phone = $('#phone').val();
 
                 $.ajax({
                     type: 'GET',
                     url: "{% url 'customer:add-contact' %}",
                     data: {
-                        'phone':phone,
+                        'phone': phone,
                         'task': task,
                         'due_date': due_date,
                         'task_description': task_description,
@@ -291,11 +292,16 @@
                     },
 
                     success: function (data) {
-                        showFlashMessage(data.message, 'success');
-                        $('#create-task').fadeOut();
+                        if (data.message === 'Task successfully added for customer') {
+                            showFlashMessage(data.message, 'success');
+                            $('#loading').fadeOut();
+                            $('#create-task').fadeOut();
+                            document.location = "/customer/contact/" + data.id;
+                            console.log(data.id)
 
-                        // todo: redirect to customer detail page
 
+                        }
+                        showFlashMessage(data.message);
                         $('#loading').fadeOut();
                     },
                     error: function () {
@@ -306,7 +312,6 @@
                 })
             }
         })
-
 
 
     </script>

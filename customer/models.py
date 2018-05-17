@@ -63,15 +63,22 @@ class Contact(models.Model):
         return "%s, %s, %s - %s" % (self.street, self.city, self.state, self.zip_code)
 
 
+STATUS = (
+    (0, 'Pending'),
+    (1, 'Completed'),
+    (2, 'Failed')
+)
+
+
 class Task(models.Model):
     contact = models.ForeignKey(Contact)
     task = models.CharField(max_length=120)
     due_date = models.DateField()
-    task_status = models.BooleanField(default=False)
+    task_status = models.IntegerField(default=0, choices=STATUS)
     task_description = models.CharField(max_length=200, null=True, blank=True)
 
     def __str__(self):
-        return self.contact
+        return self.task
 
 
 # def save_customerstatus(sender, instance, *args, **kwargs):

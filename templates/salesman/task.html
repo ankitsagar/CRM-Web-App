@@ -1,0 +1,141 @@
+{% extends 'salesman/base.html' %}
+{% load static %}
+
+{% block content %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} bg-{{ message.tags }}">
+                <!-- singular -->
+                <a class="close" data-dismiss="alert">×</a>
+                {{ message|safe }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+
+        <div class="col-sm-8 my-4">
+            <div class="card card-accent-info" id="task-details">
+                <div class="card-header">Task Details</div>
+
+                <div class="card-body">
+                    <form method="post" id="task-form">{% csrf_token %}
+                        <div class="form-group">
+                            <label>Task *</label>
+                            <input type="text" class="form-control"
+                                   value="{{ task }}" disabled>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Due Date *</label>
+                            <input type="text" class="form-control"
+                                   value="{{ task.due_date }}" disabled>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Task Description</label>
+                            <textarea rows="3" class="form-control"
+                                      id="task-description"
+                                      name="task_desc"
+                                      disabled>{{ task.task_description }}</textarea>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">Task
+                                Status</label>
+                            {% if task.task_status == 0 %}
+                                <div class="col-sm-2 bg-warning pt-2 text-center">
+                                    Pending
+                                </div>
+                            {% elif task.task_status == 1 %}
+                                <div class="col-sm-2 bg-success pt-2 text-center">
+                                    Completed
+                                </div>
+                            {% else %}
+                                <div class="col-sm-2 bg-danger pt-2 text-center">
+                                    Failed
+                                </div>
+                            {% endif %}
+                            <div class="form-check checkbox col-form-label">
+
+                            </div>
+                        </div>
+                        {% if task.task_status == 0 %}
+                            <div class="row">
+                            <input id="task-status" type="hidden" name="task_status">
+                                <div class="col-sm-6">
+                                    <button type="submit"
+                                            class="form-control btn btn-square btn-success"
+                                            id="complete-task">
+                                        Mark Completed
+                                    </button>
+                                </div>
+                                <div class="col-sm-6">
+                                    <button type="submit"
+                                            class="form-control btn btn-square btn-danger"
+                                            id="failed-task">Task Failed
+                                    </button>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </form>
+                </div>
+
+            </div>
+
+        </div>
+        <div class="col-sm-4 my-4">
+            <div class="card card-accent-danger" id="details">
+
+                <div class="card-header">
+                    <strong>Contact Detail</strong>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tbody>
+                        <tr>
+                            <th>Name</th>
+                            <td>: <span>{{ task.contact.get_full_name }}
+                            </span></td>
+                        </tr>
+                        <tr>
+                            <th>company</th>
+                            <td>: <span>
+                            {{ task.contact.company }}</span></td>
+                        </tr>
+                        <tr>
+                            <th>Phone</th>
+                            <td>: <span>{{ task.contact.phone }}</span></td>
+                        </tr>
+                        <tr>
+                            <th>Address</th>
+                            <td>: <span>{{ task.contact.get_address }}
+                            </span></td>
+                        </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}
+
+{% block script %}
+    <script>
+   $('#complete-task').click(function (e) {
+       e.preventDefault();
+       $('#task-status').val('1');
+       $('#task-form').submit();
+
+   })
+    $('#failed-task').click(function (e) {
+       e.preventDefault();
+       $('#task-status').val('2');
+       $('#task-form').submit();
+
+   })
+    </script>
+{% endblock %}

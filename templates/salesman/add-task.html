@@ -38,10 +38,13 @@
                     </div>
 
                     <div class="form-group row">
-                        <label class="col-sm-2 col-form-label">Completed</label>
-                        <div class="form-check checkbox col-form-label">
-                            <input class="form-check-input" type="checkbox"
-                                   id="task-status">
+                        <label class="col-sm-2 col-form-label">Status</label>
+                        <div class="col-form-label">
+                            <select class="form-control" id="task-status">
+                                <option value="">----select----</option>
+                                <option value='0'>Pending</option>
+                                <option value='1'>Completed</option>
+                            </select>
                         </div>
                     </div>
 
@@ -61,14 +64,55 @@
                     <strong>Add Contact</strong>
                 </div>
                 <div class="card-body">
-                    <label id="selector-label">Select Contact</label>
-                    <select class="form-control" id="contact-selector">
-                        <option value="">----select----</option>
-                        {% for contact in contacts %}
-                            <option value={{ contact.phone }}>{{ contact.get_full_name }}</option>
-                        {% endfor %}
-                    </select>
-                    <table class="table table-borderless" id="contact-table"></table>
+                    {% if contact_info %}
+                        <label id="selector-label">Select Contact</label>
+                        <select class="form-control" id="contact-selector">
+                            <option value="">----select----</option>
+                            {% for contact in contacts %}
+                                <option value={{ contact.phone }}>{{ contact.get_full_name }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <table class="table table-borderless"
+                               id="contact-table">
+                            <tr>
+                                <th>Name</th>
+                                <td>:
+                                    <span>{{ contact_info.get_full_name }}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>company</th>
+                                <td>: <span>{{ contact_info.company }}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Phone</th>
+
+                                <td>: <span
+                                        id="contact-phone">{{ contact_info.phone }}</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Address</th>
+                                <td>: <span>{{ contact_info.get_address }}
+                                </span></td>
+                            </tr>
+
+                        </table>
+
+                    {% else %}
+
+                        <label id="selector-label">Select Contact</label>
+                        <select class="form-control" id="contact-selector">
+                            <option value="">----select----</option>
+                            {% for contact in contacts %}
+                                <option value={{ contact.phone }}>{{ contact.get_full_name }}</option>
+                            {% endfor %}
+                        </select>
+                        <table class="table table-borderless"
+                               id="contact-table"></table>
+                    {% endif %}
 
                 </div>
 
@@ -95,6 +139,11 @@
 
 {% block script %}
     <script>
+
+        {% if contact_info %}
+            $('#selector-label').fadeOut();
+            $('#contact-selector').fadeOut();
+        {% endif %}
         $('#select-contact').click(function () {
             var contact_phone = $('#contact-selector').val();
             if (contact_phone === '') {
@@ -113,7 +162,7 @@
                         var table = '<tr><th>Name</th><td>: <span>' + data.name +
                             '</span></td></tr><tr><th>company</th><td>: <span>' +
                             data.company + '</span></td></tr><tr><th>Phone</th>' +
-                            '<td>: <span>' + contact_phone + '</span></td></tr>' +
+                            '<td>: <span id="contact-phone">' + contact_phone + '</span></td></tr>' +
                             '<tr><th>Address</th><td>: <span>' + data.address +
                             '</span></td></tr>';
                         $('#contact-selector').fadeOut();
@@ -134,32 +183,27 @@
             $('#contact-selector').fadeIn();
         });
 
-
         $('#create-task').click(function () {
-            if ($('#task-status').is(":checked")) {
-                var task_status = true
-            } else {
-                var task_status = false
-            }
 
             var task = $('#task').val();
             var due_date = $('#due-date').val();
             var task_description = $('#task-description').val();
+            var task_status = $('#task-status').val();
 
-            if ($('#contact-table').is(':empty')){
+            if ($('#contact-table').is(':empty')) {
                 showFlashMessage('Please select the contact first', 'danger');
-            } else if(task === ''|| due_date === ''){
+            } else if (task === '' || due_date === '') {
                 showFlashMessage('Fill the required fields', 'danger');
             } else {
                 $.ajax({
-                    type:'POST',
+                    type: 'POST',
                     url: "{% url 'customer:add-task' %}",
                     data: {
                         'task': task,
                         'due_date': due_date,
                         'task_description': task_description,
                         'task_status': task_status,
-                        'phone': $('#contact-selector').val(),
+                        'phone': $('#contact-phone').text(),
                         csrfmiddlewaretoken: '{{ csrf_token }}',
 
                     },
@@ -167,13 +211,8 @@
                         $('#loading').fadeIn();
                     },
                     success: function (data) {
-                        if (data.message === 'Task successfully created'){
-                            $('#task-details :input').prop('disabled', true)
-                            $('#create-task').fadeOut();
-                            $('#loading').fadeOut();
-                            $('.card-footer').fadeOut();
-                            // todo redirect to task detail page
-                            showFlashMessage(data.message, 'success')
+                        if (data.message === 'Task successfully created') {
+                            document.location = "/customer/task/" + data.id;
                         }
                         $('#loading').fadeOut();
                     },

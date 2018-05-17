@@ -75,10 +75,8 @@ class CreateContact(TemplateResponseMixin, ContextMixin, View):
             due_date = request.GET.get('due_date')
             task_description = request.GET.get('task_description')
             task_status = request.GET.get('task_status')
-            if task_status == 'true':
-                task_status = True
-            else:
-                task_status = False
+            if not task_status:
+                task_status = 0
 
             contact = Contact.objects.get(phone=phone)
 
@@ -88,7 +86,8 @@ class CreateContact(TemplateResponseMixin, ContextMixin, View):
                                     task_description=task_description)
                 message = 'Task successfully added for customer'
 
-                return JsonResponse({'message': message})
+                contact_id = contact.id
+                return JsonResponse({'message': message, 'id': contact_id})
         return render(request, self.get_template_names(), context)
 
     def post(self, request, **kwargs):
@@ -124,9 +123,10 @@ class CreateContact(TemplateResponseMixin, ContextMixin, View):
                 contact.zip_code = postal_code
 
             contact.save()
+            contact_id = contact.id
 
             message = 'Contact successfully saved'
-            return JsonResponse({'message': message})
+            return JsonResponse({'message': message, 'id': contact_id})
         else:
             message = 'Please fill required fields!!'
             return JsonResponse({'message': message})
@@ -160,46 +160,133 @@ def add_task(request, **kwargs):
 
             return JsonResponse(data)
         if phone and task and due_date:
+
             customer = Contact.objects.get(phone=phone)
             task_obj = Task.objects.create(contact=customer, task=task,
                                            due_date=due_date,
                                            task_description=task_description)
-            if task_status == 'true':
-                task_obj.task_status = True
+            if task_status:
+                task_obj.task_status = task_status
                 task_obj.save()
 
-            return JsonResponse({'message': 'Task successfully created'})
+            messages = 'Task successfully created'
+            id = task_obj.id
+
+            return JsonResponse({'message': messages, 'id': id})
+
+    contact_id = request.GET.get('contact_id')
+    if contact_id:
+        contact_info = Contact.objects.get(id=contact_id)
+        context['contact_info'] = contact_info
 
     return render(request, template, context)
 
 
+class TaskDetailView(DetailView):
+    model = Task
+
+    def get_template_names(self):
+        if self.request.user.role == 'Salesman':
+            template_name = "salesman/task.html"
+        elif self.request.user.role == 'Manager':
+            template_name = "manager/task.html"
+
+        return template_name
+
+    def get_object(self, queryset=None):
+        obj = super(TaskDetailView, self).get_object(queryset=queryset)
+
+        if obj.contact.added_by != self.request.user:
+            raise Http404
+        return obj
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(TaskDetailView, self).get_context_data(*args, **kwargs)
+        context['task'] = self.get_object()
+        return context
+
+    def post(self, *args, **kwargs):
+        status = self.request.POST.get('task_status')
+        id = self.kwargs['pk']
+        task = Task.objects.get(id=id)
+        task.task_status = status
+        task.save()
+        return HttpResponseRedirect(self.request.META.get('HTTP_REFERER'))
 
 
+class ContactDetail(DetailView):
+    model = Contact
+
+    def get_template_names(self):
+        if self.request.user.role == 'Salesman':
+            template = 'salesman/contact.html'
+
+        elif self.request.user.role == 'Owner':
+            template = 'owner/contact.html'
+
+        else:
+            raise Http404
+
+        return template
+
+    def get_object(self, queryset=None):
+        obj = super(ContactDetail, self).get_object(queryset=None)
+
+        if obj.added_by != self.request.user:
+            raise Http404
+
+        return obj
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(ContactDetail, self).get_context_data(*args, **kwargs)
+        context['contact'] = self.get_object()
+        return context
+
+    def post(self, *args, **kwargs):
+        contact_id = kwargs['pk']
+        contact = Contact.objects.get(id=contact_id)
+        qualified = self.request.POST.get('qualified')
+        disqualified = self.request.POST.get('disqualified')
+        won = self.request.POST.get('won')
+        final_deal_size = self.request.POST.get('final_deal_size')
+        if qualified:
+            contact.stage = qualified
+
+        if disqualified:
+            contact.stage = disqualified
+        if won and final_deal_size:
+            contact.stage = won
+            contact.deal_size = final_deal_size
+
+        contact.save()
+        return HttpResponseRedirect(self.request.META.get('HTTP_REFERER'))
 
 
+def update_contact_detail(request, *args, **kwargs):
+    contact_id = kwargs['pk']
+    contact = Contact.objects.get(id=contact_id)
+    phone = request.POST.get('phone')
+    if phone:
+        contact.phone = phone
+    else:
+        raise Http404
 
+    deal_size = request.POST.get('deal_size')
+    if deal_size:
+        contact.deal_size = deal_size
+    else:
+        contact.deal_size = None
 
+    contact.zip_code = request.POST.get('postal_code')
 
+    contact.email = request.POST.get('email')
+    contact.street = request.POST.get('street')
+    contact.city = request.POST.get('city')
+    contact.state = request.POST.get('state')
 
+    contact.save()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 # @method_decorator(login_required, name='dispatch')
 # class AddCustomer(View):
