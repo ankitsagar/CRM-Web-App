@@ -2,17 +2,21 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.utils.text import slugify
 from login.models import User
+
+
 # Create your models here.
 
 
 class CompanyDetails(models.Model):
     company_name = models.CharField(max_length=120, unique=True)
-    phone_no_1 = models.IntegerField()
-    phone_no_2 = models.IntegerField(null=True, blank=True)
+    industry_type = models.CharField(max_length=120, null=True, blank=True)
+    fax = models.CharField(max_length=120, null=True, blank=True)
+    revenue = models.CharField(max_length=120, null=True, blank=True)
+    no_of_employee = models.IntegerField(null=True, blank=True)
+    phone = models.BigIntegerField(null=True)
     email = models.EmailField(null=True, blank=True)
     website = models.CharField(max_length=120, null=True, blank=True)
     slug = models.SlugField(editable=False, unique=True)
-    added_by = models.ForeignKey(User, null=True)
     street = models.CharField(max_length=120)
     city = models.CharField(max_length=120)
     state = models.CharField(max_length=120)
@@ -20,6 +24,7 @@ class CompanyDetails(models.Model):
     country = models.CharField(max_length=120)
     created = models.DateField(auto_now_add=True, auto_now=False)
     updated = models.DateField(auto_now_add=False, auto_now=True)
+    account_owner = models.ForeignKey(User, null=True)
 
     def save(self, **kwargs):
         self.slug = slugify(self.company_name)
@@ -29,29 +34,22 @@ class CompanyDetails(models.Model):
         return self.company_name
 
 
-STAGES = (
-    (1, 'Initial'),  # Lead
-    (2, 'Qualification'),  # Opportunity
-    (3, 'Closing'),  # Won
-    (0, 'Not Qualified'),  # Archive
-)
-
-
 class Contact(models.Model):
     company = models.ForeignKey(CompanyDetails)
     first_name = models.CharField(max_length=120)
     last_name = models.CharField(max_length=120)
-    phone = models.IntegerField()
+    phone = models.BigIntegerField()
     email = models.EmailField(null=True, blank=True)
-    stage = models.IntegerField(choices=STAGES, default=1)
+    title = models.CharField(max_length=120, null=True, blank=True)
+
     added_by = models.ForeignKey(User, null=True)
+    contact_owner = models.ForeignKey(User, null=True, related_name='owner')
     street = models.CharField(max_length=120, null=True, blank=True)
     city = models.CharField(max_length=120, null=True, blank=True)
     state = models.CharField(max_length=120, null=True, blank=True)
     zip_code = models.IntegerField(null=True, blank=True)
     created = models.DateField(auto_now_add=True, auto_now=False)
     updated = models.DateField(auto_now_add=False, auto_now=True)
-    deal_size = models.DecimalField(max_digits=50, decimal_places=2, blank=True, null=True)
 
     def get_full_name(self):
         return "%s %s" % (self.first_name, self.last_name)
@@ -60,7 +58,8 @@ class Contact(models.Model):
         return self.company
 
     def get_address(self):
-        return "%s, %s, %s - %s" % (self.street, self.city, self.state, self.zip_code)
+        return "%s, %s, %s - %s" % (
+        self.street, self.city, self.state, self.zip_code)
 
 
 STATUS = (
@@ -68,12 +67,19 @@ STATUS = (
     (1, 'Completed'),
     (2, 'Failed')
 )
+PRIORITIES = (
+    (0, 'Low'),
+    (1, 'Medium'),
+    (2, 'High')
+)
 
 
 class Task(models.Model):
     contact = models.ForeignKey(Contact)
     task = models.CharField(max_length=120)
     due_date = models.DateField()
+    priority = models.IntegerField(null=True, choices=PRIORITIES)
+    task_owner = models.ForeignKey(User, null=True)
     task_status = models.IntegerField(default=0, choices=STATUS)
     task_description = models.CharField(max_length=200, null=True, blank=True)
 
@@ -81,21 +87,25 @@ class Task(models.Model):
         return self.task
 
 
-# def save_customerstatus(sender, instance, *args, **kwargs):
-#     customer_status = instance.customerstatus_set.all()
-#     if customer_status.count() == 0:
-#         status = CustomerStatus()
-#         status.company_name = instance
-#         status.stage = 'Initial'
-#         status.deal_size = 0.00
-#         status.save()
-#
-#
-# post_save.connect(save_customerstatus, sender=CustomerInformation)
+STAGES = (
+    (1, 'Prospecting'),
+    (2, 'Opportunity'),
+    (3, 'Investigation'),
+    (4, 'Presentation'),
+    (5, 'Close Won'),
+    (0, 'Close Lost'),
+)
 
 
-# class Status(models.Model):
-#     contact = models.ForeignKey(Contact)
-#
-#     def __str__(self):
-#         return str(self.contact.phone)
+class Deal(models.Model):
+    deal_name = models.CharField(max_length=120)
+    company = models.ForeignKey(CompanyDetails)
+    amount = models.DecimalField(max_digits=50, decimal_places=2, blank=True,
+                                 null=True)
+    closing_date = models.DateField()
+    stage = models.IntegerField(choices=STAGES, default=1)
+    deal_owner = models.ForeignKey(User)
+    contact = models.ForeignKey(Contact, null=True)
+
+    def __str__(self):
+        return self.company
