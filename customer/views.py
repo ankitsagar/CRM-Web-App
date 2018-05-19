@@ -20,30 +20,43 @@ def add_company(request):
         raise Http404
 
     company_name = request.POST.get('company')
+    industry = request.POST.get('industry')
+    revenue = request.POST.get('revenue')
+    employees = request.POST.get('employees')
     street = request.POST.get('street')
     postal_code = request.POST.get('postal_code')
     city = request.POST.get('city')
     state = request.POST.get('state')
     country = request.POST.get('country')
 
-    phone_1 = request.POST.get('phone_1')
-    phone_2 = request.POST.get('phone_2')
-    if not phone_2:
-        phone_2 = None
+    phone = request.POST.get('phone')
+    fax = request.POST.get('fax')
 
     email = request.POST.get('email')
     website = request.POST.get('website')
 
-    if company_name and street and postal_code and city and state and country and phone_1:
+    if company_name and street and postal_code and city and state and country and phone:
         if not CompanyDetails.objects.filter(
                 company_name=company_name).exists():
-            CompanyDetails.objects.create(company_name=company_name,
-                                          street=street, zip_code=postal_code,
-                                          city=city, state=state,
-                                          country=country, phone_no_1=phone_1,
-                                          phone_no_2=phone_2,
-                                          email=email, website=website,
-                                          added_by=request.user)
+            company = CompanyDetails.objects.create(company_name=company_name,
+                                                    street=street,
+                                                    zip_code=postal_code,
+                                                    city=city, state=state,
+                                                    country=country,
+                                                    phone=phone, fax=fax,
+                                                    industry_type=industry,
+                                                    email=email,
+                                                    website=website,
+                                                    account_owner=request.user)
+
+            if revenue:
+                company.revenue = revenue
+
+            if employees:
+                company.no_of_employee = employees
+
+            company.save()
+
             messages.success(request, 'Company Successfully Added')
             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
         else:
@@ -58,15 +71,17 @@ class CreateContact(TemplateResponseMixin, ContextMixin, View):
 
     def get_template_names(self):
         if self.request.user.role == "Salesman":
-            return ['salesman/add-contact.html']
+            return 'salesman/add-contact.html'
         elif self.request.user.role == "Manager":
-            return ["manager/add-contact.html"]
+            return "manager/add-contact.html"
         else:
             raise Http404
 
     def get(self, request, *args, **kwargs):
 
         context = self.get_context_data(**kwargs)
+        context['selected'] = request.user
+        context['users'] = User.objects.all().exclude(id=request.user.id)
         context['companies'] = CompanyDetails.objects.all()
 
         if request.is_ajax():
@@ -75,14 +90,17 @@ class CreateContact(TemplateResponseMixin, ContextMixin, View):
             due_date = request.GET.get('due_date')
             task_description = request.GET.get('task_description')
             task_status = request.GET.get('task_status')
+            priority = request.GET.get('priority')
+
             if not task_status:
                 task_status = 0
 
             contact = Contact.objects.get(phone=phone)
 
             if task and due_date:
-                Task.objects.create(contact=contact, task=task,
-                                    due_date=due_date, task_status=task_status,
+                Task.objects.create(contact=contact, due_date=due_date,
+                                    priority=priority, task_status=task_status,
+                                    task_owner=request.user, task=task,
                                     task_description=task_description)
                 message = 'Task successfully added for customer'
 
@@ -95,14 +113,17 @@ class CreateContact(TemplateResponseMixin, ContextMixin, View):
         first_name = request.POST.get('first_name')
         last_name = request.POST.get('last_name')
         company = request.POST.get('company')
-        stage = request.POST.get('stage')
-        deal_size = request.POST.get('deal_size')
+        title = request.POST.get('title')
+        owner = request.POST.get('owner')
         phone = request.POST.get('phone')
         email = request.POST.get('email')
         street = request.POST.get('street')
         city = request.POST.get('city')
         state = request.POST.get('state')
         postal_code = request.POST.get('postal_code')
+
+        if owner:
+            owner = User.objects.get(id=owner)
 
         if Contact.objects.filter(phone=phone).exists():
             message = 'Customer with this phone no. already exist!'
@@ -112,12 +133,11 @@ class CreateContact(TemplateResponseMixin, ContextMixin, View):
             company = CompanyDetails.objects.get(company_name=company)
             contact = Contact.objects.create(first_name=first_name,
                                              last_name=last_name,
-                                             company=company, stage=stage,
+                                             contact_owner=owner,
+                                             company=company, title=title,
                                              phone=phone, street=street,
                                              email=email, city=city,
                                              state=state, added_by=request.user)
-            if deal_size:
-                contact.deal_size = deal_size
 
             if postal_code:
                 contact.zip_code = postal_code
@@ -134,7 +154,7 @@ class CreateContact(TemplateResponseMixin, ContextMixin, View):
 
 def add_task(request, **kwargs):
     template = 'salesman/add-task.html'
-    contacts = Contact.objects.all().exclude(stage=0)
+    contacts = Contact.objects.all()
     context = {
         'contacts': contacts
     }
@@ -146,6 +166,7 @@ def add_task(request, **kwargs):
         task_description = request.POST.get('task_description')
         task_status = request.POST.get('task_status')
         task = request.POST.get('task')
+        priority = request.POST.get('priority')
 
         if contact_phone:
             contact = Contact.objects.get(phone=contact_phone)
@@ -163,16 +184,17 @@ def add_task(request, **kwargs):
 
             customer = Contact.objects.get(phone=phone)
             task_obj = Task.objects.create(contact=customer, task=task,
-                                           due_date=due_date,
+                                           due_date=due_date, priority=priority,
+                                           task_owner=request.user,
                                            task_description=task_description)
             if task_status:
                 task_obj.task_status = task_status
                 task_obj.save()
 
             messages = 'Task successfully created'
-            id = task_obj.id
+            task_id = task_obj.id
 
-            return JsonResponse({'message': messages, 'id': id})
+            return JsonResponse({'message': messages, 'id': task_id})
 
     contact_id = request.GET.get('contact_id')
     if contact_id:
@@ -287,6 +309,25 @@ def update_contact_detail(request, *args, **kwargs):
     contact.save()
 
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+
+class Company(DetailView):
+    model = CompanyDetails
+
+    def get_template_names(self):
+        if self.request.user.role == 'Salesman':
+            template = 'salesman/company.html'
+        elif self.request.user.role == 'Owner':
+            template = 'owner/company.html'
+        else:
+            raise Http404
+        return template
+
+    def get_context_data(self, **kwargs):
+        context = super(Company, self).get_context_data(**kwargs)
+        context['company'] = self.get_object()
+
+        return context
 
 # @method_decorator(login_required, name='dispatch')
 # class AddCustomer(View):

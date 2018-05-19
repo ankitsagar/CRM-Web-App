@@ -1,0 +1,140 @@
+{% extends 'salesman/base.html' %}
+{% load latest_task %}
+
+{% block content %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} bg-{{ message.tags }}">
+                <!-- singular -->
+                <a class="close" data-dismiss="alert">×</a>
+                {{ message|safe }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="col-sm-12">
+        <div class="card card-accent-primary mt-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-sm-5">
+                        <h3 class="card-title mb-0">{{ company }}</h3>
+                        <div class="text-muted"><i
+                                class="fa fa-map-marker"></i> {{ company.city }}, {{ company.state }}
+                        </div>
+                    </div>
+                    <div class="col-sm-7">
+                        <button class="btn btn-primary btn-square float-right">
+                            <i class="icon-note"></i>
+                        </button>
+                    </div>
+
+
+                    <table class="table table-borderless">
+                        <tbody>
+                        <tr>
+                            <th>Owner</th>
+                            {#                        <td>: <span style="color: #ced1ba;">{{ company.owner }}</span>#}
+                            <td>: <span>{{ company.company_owner }}</span>
+                            </td>
+                            <th>Website</th>
+                            <td>: <span>{{ company.website }}</span></td>
+                        </tr>
+                        <tr>
+                            <th>Phone</th>
+                            <td>: <span>{{ company.phone }}</span></td>
+                            <th>Email</th>
+                            <td>: <span>{{ company.email }}</span></td>
+                        </tr>
+
+                        <tr>
+                            <th>Address</th>
+                            <td>: <span>{{ company.street }}</span></td>
+                            <th>Zip Code</th>
+                            <td>:
+                                <span>{{ company.zip_code }}</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Revenue</th>
+                            <td>: <span>{{ company.revenue }}</span>
+                            </td>
+                            <th>Industry Type</th>
+                            <td>: <span>{{ company.industry_type }}</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>No. Of Employees</th>
+                            <td>: <span
+                                    style="">{{ company.no_of_employee }}</span>
+                            </td>
+                            <th>Account Owner</th>
+                            <td>: <span
+                                    style="">{{ company.account_owner }}</span>
+                            </td>
+                        </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+                <br>
+                <table class="table table-responsive-sm table-hover table-outline mb-0">
+                    <thead class="thead-light">
+                    <tr>
+                        <th>Contact</th>
+                        <th>Status</th>
+                        <th>Phone</th>
+                        <th>Deal Size</th>
+                        <th>Task</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for contact in company.contact_set.all %}
+                        <tr>
+                            <td>{{ contact.get_full_name }}</td>
+                            <td>
+                                {% if contact.stage == 1 %}
+                                    <span class="badge badge-dark">Initial</span>
+                                {% elif contact.stage == 2 %}
+                                    <span class="badge badge-warning">Qualified</span>
+                                {% elif contact.stage == 3 %}
+                                    <span class="badge badge-success">Won</span>
+                                {% elif contact.stage == 0 %}
+                                    <span class="badge badge-danger">Disqualified</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ contact.phone }}</td>
+                            <td>
+                                {% if contact.deal_size %}
+                                    {{ contact.deal_size }}
+                                {% else %}
+                                    <span class="text-muted">Not Specified</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if contact.task_set.all|latest_task %}
+                                    {{ contact.task_set.all|latest_task }}
+                                {% else %}
+                                    <span class="text-muted">Not Assigned</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'customer:contact' pk=contact.id %}"
+                                   class="btn btn-ghost-danger btn-md ">
+                                    <i class="fa fa-external-link"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+
+                </table>
+
+            </div>
+        </div>
+    </div>
+
+
+
+
+{% endblock %}

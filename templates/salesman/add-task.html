@@ -19,9 +19,30 @@
 
                 <div class="card-body">
                     <div class="form-group">
-                        <label>Task *</label>
+                        <label>Subject *</label>
                         <input type="text" class="form-control" name="task"
                                id="task">
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-sm-6">
+                            <label>Status</label>
+
+                            <select class="form-control" id="task-status">
+                                <option value="">----select----</option>
+                                <option value='0'>Pending</option>
+                                <option value='1'>Completed</option>
+                                <option value='2'>Failed</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group col-sm-6">
+                            <label>Status</label>
+                            <select class="form-control" id="priority">
+                                <option value="0">Low</option>
+                                <option value='1'>Medium</option>
+                                <option value='2'>High</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -35,17 +56,6 @@
                         <textarea rows="5" class="form-control"
                                   id="task-description"
                                   name="task_desc"></textarea>
-                    </div>
-
-                    <div class="form-group row">
-                        <label class="col-sm-2 col-form-label">Status</label>
-                        <div class="col-form-label">
-                            <select class="form-control" id="task-status">
-                                <option value="">----select----</option>
-                                <option value='0'>Pending</option>
-                                <option value='1'>Completed</option>
-                            </select>
-                        </div>
                     </div>
 
                     <button type="submit" class="form-control btn btn-primary"
@@ -168,6 +178,7 @@
                         $('#contact-selector').fadeOut();
                         $('#selector-label').fadeOut();
                         $('#contact-table').append(table);
+                        $('#select-contact').fadeOut();
                         $('#loading').fadeOut();
                     },
                     error: function () {
@@ -180,6 +191,8 @@
         $('#reset-contact').click(function () {
             $('#contact-table').empty();
             $('#selector-label').fadeIn();
+            $('#select-contact').fadeIn();
+
             $('#contact-selector').fadeIn();
         });
 
@@ -189,6 +202,7 @@
             var due_date = $('#due-date').val();
             var task_description = $('#task-description').val();
             var task_status = $('#task-status').val();
+            var priority = $('#priority').val();
 
             if ($('#contact-table').is(':empty')) {
                 showFlashMessage('Please select the contact first', 'danger');
@@ -203,6 +217,7 @@
                         'due_date': due_date,
                         'task_description': task_description,
                         'task_status': task_status,
+                        'priority': priority,
                         'phone': $('#contact-phone').text(),
                         csrfmiddlewaretoken: '{{ csrf_token }}',
 

@@ -1,5 +1,6 @@
 {% extends 'salesman/base.html' %}
 {% load static %}
+{% load latest_task %}
 
 {% block content %}
     {% if messages %}
@@ -17,7 +18,10 @@
             <div class="card card-accent-danger my-4" id="details">
 
                 <div class="card-header">
-                    <strong>Add Contact</strong>
+                    <strong>
+                        <i class="icon-user-follow mr-3"></i>
+                        Add Contact
+                    </strong>
                 </div>
                 <div class="card-body">
                     {#                    <form method="post" class="form-group"> {% csrf_token %}#}
@@ -52,34 +56,37 @@
                         </div>
                     </div>
 
+
                     <div class="form-group row">
-                        <label class="col-sm-2 col-form-label">Status *</label>
-                        <div class="col-md-10">
-                            <select class="form-control" name="stage"
-                                    id="stage">
-                                <option value="">----Select----</option>
-                                <option value="1">Initial</option>
-                                <option value="2">Qualified</option>
+                        <label class="col-sm-2 col-form-label">Title</label>
+                        <div class="col-sm-4">
+                            <input type="text" class="form-control"
+                                   name="title" id="title"
+                                   placeholder="Title">
+                        </div>
+
+                        <label class="col-sm-2 col-form-label">Owner *</label>
+                        <div class="col-md-4">
+                            <select class="form-control" name="owner"
+                                    id="owner">
+                                <option value="{{ selected.id }}">{{ selected.get_full_name }}</option>
+                                {% for user in users %}
+                                    <option value="{{ user.id }}">{{ user.get_full_name }}</option>
+                                {% endfor %}
 
                             </select>
                         </div>
-                    </div>
 
-                    <div class="form-group row">
-                        <label class="col-sm-2 col-form-label">Deal Size</label>
-                        <div class="col-sm-10">
-                            <input type="number" class="form-control"
-                                   name="deal_size" id="deal-size"
-                                   placeholder="Deal Size">
-                        </div>
                     </div>
 
                     <div class="from-group row">
 
                         <label class="col-sm-2 col-form-label">Phone *</label>
                         <div class="form-group col-sm-4">
-                            <input type="number" class="form-control"
-                                   name="phone" id="phone" placeholder="Phone"
+                            <input type="text" class="form-control"
+                                   name="phone" id="phone" maxlength="10"
+                                   pattern="\d{10}" placeholder="Phone"
+                                   title="Please enter exactly 10 digits"
                                    required>
                         </div>
                         <label class="col-sm-2 col-form-label">Email</label>
@@ -120,13 +127,14 @@
                                    required>
                         </div>
                     </div>
+                    <label></label>
 
                     <button type="submit" id="add-contact"
                             class="btn btn-block btn-success">Add Contact
                     </button>
                     <a id="contact-profile"
-                       class="text-white btn btn-block btn-primary">
-                       GO To Customer Profile Page</a>
+                       class="text-white btn btn-block btn-warning">
+                        Go To Customer Profile Page</a>
 
                     {#                    </form>#}
                 </div>
@@ -137,13 +145,38 @@
         <!-- TASK -->
         <div class="col-sm-5 my-4">
             <div class="card card-accent-info">
-                <div class="card-header">Task Details</div>
+                <div class="card-header">
+                    <i class="fa fa-calendar-check-o"> </i>
+                    Task Details
+                </div>
 
                 <div class="card-body">
                     <div class="form-group">
-                        <label>Task *</label>
+                        <label>Subject *</label>
                         <input type="text" class="form-control" name="task"
                                id="task">
+                    </div>
+
+                    <div class="row">
+
+                        <div class="form-group col-sm-6">
+                            <label>Task Status</label>
+
+                            <select class="form-control" id="task-status">
+                                <option value="">----select----</option>
+                                <option value='0'>Pending</option>
+                                <option value='1'>Completed</option>
+                                <option value='2'>Failed</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-sm-6">
+                            <label>Priority</label>
+                            <select class="form-control" id="priority">
+                                <option value='0'>Low</option>
+                                <option value='1'>Medium</option>
+                                <option value='2'>High</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -154,22 +187,11 @@
 
                     <div class="form-group">
                         <label>Task Description</label>
-                        <textarea rows="5" class="form-control"
+                        <textarea rows="2" class="form-control"
                                   id="task-description"
                                   name="task_desc"></textarea>
                     </div>
 
-                    <div class="form-group row">
-                        <label class="col-sm-3 col-form-label">Task
-                            Status</label>
-                        <div class="col-form-label">
-                            <select class="form-control" id="task-status">
-                                <option value="">----select----</option>
-                                <option value='0'>Pending</option>
-                                <option value='1'>Completed</option>
-                            </select>
-                        </div>
-                    </div>
 
                     <button type="submit" class="form-control btn btn-primary"
                             id="create-task">
@@ -196,8 +218,8 @@
             var first_name = $('#first-name').val();
             var last_name = $('#last-name').val();
             var company = $('#company').val();
-            var stage = $('#stage').val();
-            var deal_size = $('#deal-size').val();
+            var title = $('#title').val();
+            var owner = $('#owner').val();
             var phone = $('#phone').val();
             var email = $('#email').val();
             var street = $('#street').val();
@@ -209,8 +231,8 @@
                 'first_name': first_name,
                 'last_name': last_name,
                 'company': company,
-                'stage': stage,
-                'deal_size': deal_size,
+                'title': title,
+                'owner': owner,
                 'phone': phone,
                 'email': email,
                 'street': street,
@@ -221,7 +243,7 @@
             };
             console.log(data_values)
             console.log(company)
-            if (first_name == "" || last_name == "" || company == "" || stage == "" || phone == "") {
+            if (first_name == "" || last_name == "" || company == "" || phone == "") {
                 alert('Please fill the required fields')
             }
             else {
@@ -267,6 +289,7 @@
             var due_date = $('#due-date').val();
             var task_description = $('#task-description').val();
             var task_status = $('#task-status').val()
+            var priority = $('#priority').val()
 
             if (!$('#details :input').prop('disabled')) {
                 showFlashMessage('Please create contact first', 'danger');
@@ -284,7 +307,8 @@
                         'task': task,
                         'due_date': due_date,
                         'task_description': task_description,
-                        'task_status': task_status
+                        'task_status': task_status,
+                        'priority': priority,
                     },
 
                     beforeSend: function () {
