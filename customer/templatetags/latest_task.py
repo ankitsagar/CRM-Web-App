@@ -11,3 +11,12 @@ def latest_task(taskset):
         return None
 
 
+@register.filter
+def strip_str(string):
+    print(string)
+    if string:
+        return string.strip()
+    else:
+        return None
+
+

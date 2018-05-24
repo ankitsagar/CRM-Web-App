@@ -10,8 +10,8 @@ urlpatterns = [
     url(r'^contact/(?P<pk>\d+)/$', ContactDetail.as_view(), name='contact'),
     url(r'^company/(?P<slug>[\w-]+)/$', Company.as_view(),
         name='company'),
-    url(r'^update-contact/(?P<pk>\d+)/$', update_contact_detail,
-        name='update-contact'),
+    # url(r'^update-contact/(?P<pk>\d+)/$', update_contact_detail,
+    #     name='update-contact'),
 
     # url(r'^customer/search/$', CustomerSearchView.as_view(), name='customer_search'),
 

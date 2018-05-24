@@ -18,12 +18,14 @@
                 <div class="row">
                     <div class="col-sm-5">
                         <h3 class="card-title mb-0">{{ company }}</h3>
-                        <div class="text-muted"><i
-                                class="fa fa-map-marker"></i> {{ company.city }}, {{ company.state }}
+                        <div class="text-muted"><i class="fa fa-map-marker">
+                        </i> {{ company.city }}, {{ company.state }}
                         </div>
                     </div>
                     <div class="col-sm-7">
-                        <button class="btn btn-primary btn-square float-right">
+                        <button type="button" data-toggle="modal"
+                                data-target="#company-modal"
+                                class="btn btn-primary btn-square float-right">
                             <i class="icon-note"></i>
                         </button>
                     </div>
@@ -32,19 +34,77 @@
                     <table class="table table-borderless">
                         <tbody>
                         <tr>
-                            <th>Owner</th>
-                            {#                        <td>: <span style="color: #ced1ba;">{{ company.owner }}</span>#}
-                            <td>: <span>{{ company.company_owner }}</span>
+                            <th>Account Owner</th>
+                            <td>: <span
+                                    style="">{{ company.account_owner }}</span>
                             </td>
-                            <th>Website</th>
-                            <td>: <span>{{ company.website }}</span></td>
+                            <th>Industry Type</th>
+                            <td>:
+                                {% if company.industry_type %}
+                                    <span>{{ company.industry_type }}
+                                </span>
+                                {% else %}
+                                    <span class="text-muted">Not Specified</span>
+                                {% endif %}
+                            </td>
+
                         </tr>
+                        <tr>
+                            <th>Revenue</th>
+                            <td>:
+                                {% if company.revenue %}
+                                    <span>{{ company.revenue }}</span>
+                                {% else %}
+                                    <span class="text-muted">Not Specified</span>
+                                {% endif %}
+                            </td>
+                            <th>Employees</th>
+                            <td>:
+                                {% if company.no_of_employee %}
+                                    <span>{{ company.no_of_employee }}</span>
+                                {% else %}
+                                    <span class="text-muted">Not Specified</span>
+                                {% endif %}
+
+                            </td>
+                        </tr>
+
                         <tr>
                             <th>Phone</th>
                             <td>: <span>{{ company.phone }}</span></td>
                             <th>Email</th>
-                            <td>: <span>{{ company.email }}</span></td>
+                            <td>:
+                                {% if company.email %}
+                                    <span>{{ company.email }}</span>
+                                {% else %}
+                                    <span class="text-muted">Not Specified</span>
+                                {% endif %}
+
+                            </td>
                         </tr>
+
+                        <tr>
+
+                            <th>Website</th>
+                            <td>:
+                                {% if company.website %}
+                                    <span><a href="{{ company.website }}">
+                                    {{ company.website }}</a></span>
+                                {% else %}
+                                    <span class="text-muted">Not Specified</span>
+                                {% endif %}
+                            </td>
+                            <th>Fax</th>
+                            <td>:
+                                {% if company.fax %}
+                                    <span>{{ company.fax }}</span>
+                                {% else %}
+                                    <span class="text-muted">Not Specified</span>
+                                {% endif %}
+
+                            </td>
+                        </tr>
+
 
                         <tr>
                             <th>Address</th>
@@ -54,87 +114,254 @@
                                 <span>{{ company.zip_code }}</span>
                             </td>
                         </tr>
-                        <tr>
-                            <th>Revenue</th>
-                            <td>: <span>{{ company.revenue }}</span>
-                            </td>
-                            <th>Industry Type</th>
-                            <td>: <span>{{ company.industry_type }}</span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>No. Of Employees</th>
-                            <td>: <span
-                                    style="">{{ company.no_of_employee }}</span>
-                            </td>
-                            <th>Account Owner</th>
-                            <td>: <span
-                                    style="">{{ company.account_owner }}</span>
-                            </td>
-                        </tr>
+
 
                         </tbody>
                     </table>
                 </div>
                 <br>
-                <table class="table table-responsive-sm table-hover table-outline mb-0">
-                    <thead class="thead-light">
-                    <tr>
-                        <th>Contact</th>
-                        <th>Status</th>
-                        <th>Phone</th>
-                        <th>Deal Size</th>
-                        <th>Task</th>
-                        <th></th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {% for contact in company.contact_set.all %}
-                        <tr>
-                            <td>{{ contact.get_full_name }}</td>
-                            <td>
-                                {% if contact.stage == 1 %}
-                                    <span class="badge badge-dark">Initial</span>
-                                {% elif contact.stage == 2 %}
-                                    <span class="badge badge-warning">Qualified</span>
-                                {% elif contact.stage == 3 %}
-                                    <span class="badge badge-success">Won</span>
-                                {% elif contact.stage == 0 %}
-                                    <span class="badge badge-danger">Disqualified</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ contact.phone }}</td>
-                            <td>
-                                {% if contact.deal_size %}
-                                    {{ contact.deal_size }}
-                                {% else %}
-                                    <span class="text-muted">Not Specified</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if contact.task_set.all|latest_task %}
-                                    {{ contact.task_set.all|latest_task }}
-                                {% else %}
-                                    <span class="text-muted">Not Assigned</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <a href="{% url 'customer:contact' pk=contact.id %}"
-                                   class="btn btn-ghost-danger btn-md ">
-                                    <i class="fa fa-external-link"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
+                <div class="row">
+                    <div class="col-sm-3">
 
-                </table>
+                        <div class="card card-accent-primary">
+                            <div class="card-header">
+                                <i class="fa fa-user"> </i>
+                                <strong> Contacts</strong>
+                            </div>
+                            <div class="card-body">
+                                {% for contact in contact_set %}
 
+                                    <strong>
+                                        <a href="{% url 'customer:contact' pk=contact.id %}">
+                                            {{ contact.get_full_name }}</a>
+                                    </strong>
+                                    <br>
+                                    <div class="pt-1">
+                                        <i class="icon-phone"> </i>
+                                        <span>{{ contact.phone }}</span>
+                                    </div>
+                                    {% if contact.email %}
+                                        <div class="pt-1">
+                                            <i class="icon-envelope"></i>
+                                            <span>{{ contact.email }}</span>
+                                        </div>
+                                    {% endif %}
+                                    <br>
+
+                                {% endfor %}
+                            </div>
+
+                        </div>
+                    </div>
+
+
+                    <div class="col-sm-4">
+
+                        <div class="card card-accent-warning">
+                            <div class="card-header">
+                                <i class="fa fa-tasks"> </i>
+                                <strong> Task</strong>
+                            </div>
+                            <div class="card-body">
+                                {% for contact in contact_set %}
+                                    {% for task in contact.task_set.all %}
+                                        <div class="pb-2">
+                                            {% if task.task_status == 0 %}
+                                                <sapn class="badge badge-warning">
+                                                    {{ task.due_date|date:"M d" }}
+                                                </sapn>
+                                            {% elif task.task_status == 1 %}
+                                                <sapn class="badge badge-success">
+                                                    {{ task.due_date|date:"M d" }}
+                                                </sapn>
+                                            {% elif task.task_status == 2 %}
+                                                <sapn class="badge badge-danger">
+                                                    {{ task.due_date|date:"M d" }}
+                                                </sapn>
+                                            {% endif %}
+                                            <strong class="pl-3">{{ task.task }}</strong>
+                                        </div>
+                                    {% endfor %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4">
+
+                        <div class="card card-accent-danger">
+                            <div class="card-header">
+                                <i class="fa fa-handshake-o"> </i>
+                                <strong> Deals</strong>
+                            </div>
+                            <div class="card-body">
+
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Company Modal -->
+    <div class="modal fade" tabindex="-1" role="dialog" id="company-modal"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <form method="post"> {% csrf_token %}
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Details</h5>
+                        <button type="button" class="close" data-dismiss="modal"
+                                aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="company_id"
+                               value="{{ company.id }}">
+                        <div class="form-group">
+                            <label>Company Name *</label>
+                            <input type="text" class="form-control"
+                                   name="company"
+                                   value="{{ company }}" required>
+                        </div>
 
+                        <div class="form-group row">
+                            <div class="col-sm-6">
+                                <label>Industry Type</label>
+                                <input type="text" class="form-control"
+                                       name="industry"
+                                       value="{{ company.industry_type }}">
+                            </div>
 
+                            <div class="col-sm-6">
+                                <label>Revenue</label>
+                                <input class="form-control" type="number"
+                                       name="revenue"
+                                       value="{{ company.revenue }}">
+                            </div>
+                        </div>
 
+                        <div class="form-group row">
+                            <div class="col-sm-6">
+                                <label>Phone *</label>
+                                <input type="text" class="form-control"
+                                       name="phone"
+                                       maxlength="10" pattern="\d{10}"
+                                       title="Please enter exactly 10 digits"
+                                       value="{{ company.phone }}" required>
+                            </div>
+                            <div class="col-sm-6">
+                                <label>Fax</label>
+                                <input type="text" class="form-control"
+                                       name="fax" value="{{ company.fax }}">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-6">
+                                <label>Email</label>
+                                <input class="form-control" type="email"
+                                       name="email" value="{{ company.email }}">
+                            </div>
+                            <div class="col-sm-6">
+                                <label>Website</label>
+                                <input class="form-control" type="url"
+                                       name="website"
+                                       value="{{ company.website }}">
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-sm-6">
+                                <label>Employees</label>
+                                <input class="form-control" type="number"
+                                       name="employees"
+                                       value="{{ company.no_of_employee }}">
+                            </div>
+                            <div class="col-sm-6">
+                                <label>Owner</label>
+                                <select class="form-control select"
+                                        name="owner">
+                                    <option value="{{ company.account_owner.id }}">
+                                        {{ company.account_owner.get_full_name }}</option>
+                                    {% for user in users %}
+                                        <option value="{{ user.id }}">{{ user.get_full_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                        </div>
+
+                        <div class="from-group row">
+
+                            <div class="col-sm-6">
+                                <label>Street *</label>
+                                <input type="text" class="form-control"
+                                       name="street"
+                                       value="{{ company.street }}" required>
+                            </div>
+                            <div class="col-sm-6">
+                                <label>City *</label>
+                                <input type="text" class="form-control"
+                                       name="city" value="{{ company.city }}"
+                                       required>
+                            </div>
+
+                        </div>
+
+                        <div class="form-group pt-3 row">
+                            <div class="col-sm-4">
+                                <label>Zip Code *</label>
+                                <input type="text" class="form-control"
+                                       name="postal_code" pattern="[0-9]{6}"
+                                       value="{{ company.zip_code }}"
+                                       maxlength="6"
+                                       required>
+                            </div>
+
+                            <div class="col-sm-4">
+                                <label>State *</label>
+
+                                <input type="text" class="form-control"
+                                       name="state" value="{{ company.city }}">
+                            </div>
+
+                            <div class="col-sm-4">
+                                <label>Country *</label>
+                                <input type="text" class="form-control"
+                                       name="country"
+                                       value="{{ company.country }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">
+                            Save Changes
+                        </button>
+                        <button type="button" class="btn btn-secondary"
+                                data-dismiss="modal">Close
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!--End Company Modal -->
+
+{% endblock %}
+
+{% block script %}
+    <script>
+        var map = {};
+        $('.select option').each(function () {
+            if (map[this.value]) {
+                $(this).remove()
+            }
+            map[this.value] = true;
+        })
+    </script>
 {% endblock %}

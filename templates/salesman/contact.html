@@ -11,44 +11,33 @@
 {% endblock %}
 
 {% block content %}
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} bg-{{ message.tags }}">
-                <a class="close" data-dismiss="alert">×</a>
-                {{ message|safe }}
-            </div>
-        {% endfor %}
-    {% endif %}
 
-    <div class="row">
+
+    <div class="row mt-4">
+        <div class="col-sm-12">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} bg-{{ message.tags }}">
+                        <a class="close" data-dismiss="alert">×</a>
+                        {{ message|safe }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
         <!--Contact Details -->
-        <div class="col-sm-6 mt-4">
+        <div class="col-sm-6">
             <div class="card card-accent-primary">
                 <div class="card-header">
-                    <strong>Contact Details</strong>
-                    {% if contact.stage == 3 %}
-                        <h4 class="pull-right">
+                    <strong>
+                        <i class="icon-user mr-2"> </i>
+                        Contact Details
+                    </strong>
+                    <button type="button" data-toggle="modal"
+                            data-target="#edit-details"
+                            class="pull-right btn btn-square btn-sm btn-primary">
+                        <i class="fa fa-edit"></i> edit
+                    </button>
 
-                            <span class="badge badge-success"><i
-                                    class="fa fa-check"></i> Won</span>
-                        </h4>
-
-                    {% elif contact.stage == 0 %}
-                        <h4 class="pull-right">
-
-                            <span class="badge badge-danger"><i
-                                    class="icon-user-unfollow">
-                            </i> Not Qualified</span>
-                        </h4>
-
-                    {% else %}
-                        <button type="button" data-toggle="modal"
-                                data-target="#edit-details"
-                                class="pull-right btn btn-square btn-sm btn-primary">
-                            <i class="fa fa-edit"></i> edit
-                        </button>
-
-                    {% endif %}
                 </div>
                 <div class="card-body">
                     <table class="table table-borderless" id="contact-details">
@@ -58,12 +47,22 @@
                             <td>: {{ contact.get_full_name }}</td>
                         </tr>
                         <tr>
+                            <th>Owner</th>
+                            <td>: {{ contact.contact_owner }}</td>
+                        </tr>
+                        <tr>
                             <th>Company</th>
                             <td>: {{ contact.company }}</td>
                         </tr>
                         <tr>
-                            <th>Status</th>
-                            <td>: {{ contact.get_stage_display }}</td>
+                            <th>Title</th>
+                            <td>:
+                                {% if contact.title %}
+                                    {{ contact.title }}
+                                {% else %}
+                                    <span class="text-muted">Not Specified</span>
+                                {% endif %}
+                            </td>
                         </tr>
                         <tr id="phone">
                             <th>Phone</th>
@@ -71,58 +70,27 @@
                         </tr>
                         <tr id="email">
                             <th>Email</th>
-                            <td>: {{ contact.email }}</td>
-                        </tr>
-                        <tr id="deal-size">
-                            <th>Deal Size</th>
-                            <td>: {{ contact.deal_size }}</td>
+                            <td>:
+                                {% if contact.email %}
+                                    {{ contact.email }}
+                                {% else %}
+                                    <span class="text-muted">Not Specified</span>
+                                {% endif %}
+                            </td>
                         </tr>
                         <tr id="address">
                             <th>Address</th>
-                            <td>: {{ contact.get_address }}</td>
+                            <td>:
+                                {% if contact.get_address %}
+                                    {{ contact.get_address }}
+                                {% else %}
+                                    <span class="text-muted">Not Specified</span>
+                                {% endif %}
+                            </td>
                         </tr>
 
                         </tbody>
                     </table>
-                </div>
-                <div class="card-footer">
-
-                    {% if contact.stage == 1 %}
-                        <form class="form-group" method="post">{% csrf_token %}
-                            <button type="submit"
-                                    class="btn btn-success btn-square"
-                                    name="qualified" value="2">
-                                <i class="fa fa-check">
-                                </i> Mark As Qualified
-                            </button>
-
-
-                            <button type="button"
-                                    class="btn btn-danger btn-square"
-                                    data-toggle="modal"
-                                    data-target="#not-qualified">
-                                <i class="fa fa-remove">
-                                </i> Not Qualified
-                            </button>
-                        </form>
-
-                    {% elif contact.stage == 2 %}
-                        <button type="button" class="btn btn-success btn-square"
-                                data-toggle="modal" data-target="#contact-won">
-                            <i class="fa fa-flag-checkered">
-                            </i> Mark As Won
-                        </button>
-
-                        <button class="btn btn-danger btn-square"
-                                data-toggle="modal"
-                                data-target="#not-qualified">
-                            <i class="fa fa-remove">
-                            </i> Not Qualified
-                        </button>
-
-                    {% endif %}
-
-
                 </div>
             </div>
 
@@ -130,56 +98,61 @@
         <!--End Contact Details -->
 
         <!--Task Details -->
-        <div class="col-sm-6 mt-4">
+        <div class="col-sm-6">
             <div class="card card-accent-danger">
                 <div class="card-header">
                     <strong>Task</strong>
+                    <button type="button"
+                            class="pull-right btn btn-square btn-sm btn-danger">
+                        <i class="fa fa-plus"> </i> Add New
+                    </button>
                 </div>
                 <div class="card-body">
-                    <table class="table table-borderless">
-                        <tbody>
-                        <tr>
-                            <th style="width: 164px;">Task</th>
-                            <th style="width: 174px;">Due Date</th>
-                            <th class="">Status</th>
-                        </tr>
-                        </tbody>
-                    </table>
-                    <div class="pre-scrollable">
+                    {% if contact.task_set.all %}
                         <table class="table table-borderless">
                             <tbody>
-                            {% for task in contact.task_set.all %}
-                                <tr>
-                                    <td>
-                                        <a href="{% url 'customer:task' pk=task.id %}">
-                                            {{ task.task }}</a></td>
-                                    <td>{{ task.due_date }}</td>
-                                    <td>{% if task.task_status == 0 %}
-                                        <p class="badge badge-warning">
-                                            Pending</p>
-                                    {% elif task.task_status == 1 %}
-                                        <p class="badge badge-success">
-                                            Completed</p>
-                                    {% else %}
-                                        <p class="badge badge-danger">
-                                            Failed</p>
-                                    {% endif %}
-                                    </td>
-                                </tr>
-                            {% endfor %}
+                            <tr>
+                                <th style="width: 164px;">Task</th>
+                                <th style="width: 174px;">Due Date</th>
+                                <th class="">Status</th>
+                            </tr>
                             </tbody>
-
                         </table>
-                    </div>
+                        <div class="pre-scrollable">
 
-                </div>
-                <div class="card-footer">
-                    {% if contact.stage == 1 or contact.stage == 2 %}
-                        <a href="{% url 'customer:add-task' %}?contact_id={{ contact.id }}"
-                           class="text-white pull-left btn btn-square btn-md btn-primary">
-                            <i class="fa fa-plus-square"></i> Add New Task
-                        </a>
+                            <table class="table table-borderless">
+                                <tbody>
+                                {% for task in contact.task_set.all %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'customer:task' pk=task.id %}">
+                                                {{ task.task }}</a></td>
+                                        <td>{{ task.due_date }}</td>
+                                        <td>{% if task.task_status == 0 %}
+                                            <p class="badge badge-warning">
+                                                Pending</p>
+                                        {% elif task.task_status == 1 %}
+                                            <p class="badge badge-success">
+                                                Completed</p>
+                                        {% else %}
+                                            <p class="badge badge-danger">
+                                                Failed</p>
+                                        {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+
+                            </table>
+
+                        </div>
+                    {% else %}
+                        <h2 class="text-center text-muted text">No Task
+                            Found
+                        </h2>
+
                     {% endif %}
+
                 </div>
             </div>
         </div>
@@ -187,12 +160,11 @@
 
     </div>
 
-    <!--Edit Modal -->
+    <!--Details Edit Modal -->
     <div class="modal fade" id="edit-details" tabindex="-1" role="dialog"
          aria-hidden="true">
         <div class="modal-dialog" role="document">
-            <form class="form-group" method="post"
-                  action="{% url 'customer:update-contact' pk=contact.id %}">
+            <form class="form-group" method="post">
                 {% csrf_token %}
                 <div class="modal-content">
                     <div class="modal-header">
@@ -227,15 +199,29 @@
                                        placeholder="Email">
                             </div>
                         </div>
+                        <div class="from-group row">
+                            <label class="col-sm-3 col-form-label">Title</label>
+                            <div class="form-group col-sm-9">
+                                <input type="text" class="form-control"
+                                       name="title" id="title"
+                                       value="{{ contact.title }}"
+                                       placeholder="Title">
+                            </div>
+                        </div>
 
                         <div class="from-group row">
-                            <label class="col-sm-3 col-form-label">Deal
-                                Size</label>
+                            <label class="col-sm-3 col-form-label">Owner</label>
                             <div class="form-group col-sm-9">
-                                <input type="number" class="form-control"
-                                       name="deal_size" id="deal-size"
-                                       placeholder="Deal Size"
-                                       value="{{ contact.deal_size }}">
+                                <select class="form-control" name="owner"
+                                        id="owner">
+                                    <option value="{{ contact.contact_owner.id }}">
+                                        {{ contact.contact_owner.get_full_name }}</option>
+                                    {% for user in users %}
+                                        <option value="{{ user.id }}">{{ user.get_full_name }}</option>
+                                    {% endfor %}
+
+                                </select>
+
                             </div>
                         </div>
 
@@ -255,14 +241,14 @@
                                 <input type="text" class="form-control"
                                        name="city"
                                        id="city" placeholder="City"
-                                       value="{{ contact.city }}" required>
+                                       value="{{ contact.city }}">
                             </div>
 
                             <div class="form-group col-sm-3">
                                 <input type="text" class="form-control"
                                        name="state"
                                        id="state" placeholder="State"
-                                       value="{{ contact.state }}" required>
+                                       value="{{ contact.state }}">
                             </div>
 
                             <div class="form-group col-sm-3">
@@ -270,8 +256,7 @@
                                        name="postal_code" id="postal"
                                        pattern="[0-9]{6}"
                                        value="{{ contact.zip_code }}"
-                                       maxlength="6" placeholder="Zip Code"
-                                       required>
+                                       maxlength="6" placeholder="Zip Code">
                             </div>
                         </div>
 
@@ -288,80 +273,80 @@
             </form>
         </div>
     </div>
+    <!-- End Details Edit Modal -->
 
 
-
-    <!--Not Qualified Modal -->
-    <div class="modal fade" tabindex="-1" role="dialog" id="not-qualified"
-         aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <form method="post"> {% csrf_token %}
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Are You sure?</h5>
-                        <button type="button" class="close" data-dismiss="modal"
-                                aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <p>After marking a contact as unqualified you cannot
-                            change it back.</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary"
-                                name="disqualified" value="0">Yes
-                        </button>
-                        <button type="button" class="btn btn-secondary"
-                                data-dismiss="modal">No
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
+    {#    <!--Not Qualified Modal -->#}
+    {#    <div class="modal fade" tabindex="-1" role="dialog" id="not-qualified"#}
+    {#         aria-hidden="true">#}
+    {#        <div class="modal-dialog" role="document">#}
+    {#            <form method="post"> {% csrf_token %}#}
+    {#                <div class="modal-content">#}
+    {#                    <div class="modal-header">#}
+    {#                        <h5 class="modal-title">Are You sure?</h5>#}
+    {#                        <button type="button" class="close" data-dismiss="modal"#}
+    {#                                aria-label="Close">#}
+    {#                            <span aria-hidden="true">&times;</span>#}
+    {#                        </button>#}
+    {#                    </div>#}
+    {#                    <div class="modal-body">#}
+    {#                        <p>After marking a contact as unqualified you cannot#}
+    {#                            change it back.</p>#}
+    {#                    </div>#}
+    {#                    <div class="modal-footer">#}
+    {#                        <button type="submit" class="btn btn-primary"#}
+    {#                                name="disqualified" value="0">Yes#}
+    {#                        </button>#}
+    {#                        <button type="button" class="btn btn-secondary"#}
+    {#                                data-dismiss="modal">No#}
+    {#                        </button>#}
+    {#                    </div>#}
+    {#                </div>#}
+    {#            </form>#}
+    {#        </div>#}
+    {#    </div>#}
 
     <!--End Not Qualified Modal  -->
 
     <!-- Customer Won Modal -->
 
-    <div class="modal fade" tabindex="-1" role="dialog" id="contact-won"
-         aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <form method="post"> {% csrf_token %}
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Are You sure?</h5>
-                        <button type="button" class="close" data-dismiss="modal"
-                                aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="from-group row">
-                            <label class="col-sm-3 col-form-label">Deal
-                                Size</label>
-                            <div class="form-group col-sm-9">
-                                <input type="number" class="form-control"
-                                       name="final_deal_size"
-                                       placeholder="Deal Size"
-                                       value="{{ contact.deal_size }}" required>
-                            </div>
-                        </div>
-
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary"
-                                name="won" value="3">Save
-                        </button>
-                        <button type="button" class="btn btn-secondary"
-                                data-dismiss="modal">Close
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
+    {#    <div class="modal fade" tabindex="-1" role="dialog" id="contact-won"#}
+    {#         aria-hidden="true">#}
+    {#        <div class="modal-dialog" role="document">#}
+    {#            <form method="post"> {% csrf_token %}#}
+    {#                <div class="modal-content">#}
+    {#                    <div class="modal-header">#}
+    {#                        <h5 class="modal-title">Are You sure?</h5>#}
+    {#                        <button type="button" class="close" data-dismiss="modal"#}
+    {#                                aria-label="Close">#}
+    {#                            <span aria-hidden="true">&times;</span>#}
+    {#                        </button>#}
+    {#                    </div>#}
+    {#                    <div class="modal-body">#}
+    {#                        <div class="from-group row">#}
+    {#                            <label class="col-sm-3 col-form-label">Deal#}
+    {#                                Size</label>#}
+    {#                            <div class="form-group col-sm-9">#}
+    {#                                <input type="number" class="form-control"#}
+    {#                                       name="final_deal_size"#}
+    {#                                       placeholder="Deal Size"#}
+    {#                                       value="{{ contact.deal_size }}" required>#}
+    {#                            </div>#}
+    {#                        </div>#}
+    {##}
+    {#                    </div>#}
+    {#                    <div class="modal-footer">#}
+    {#                        <button type="submit" class="btn btn-primary"#}
+    {#                                name="won" value="3">Save#}
+    {#                        </button>#}
+    {#                        <button type="button" class="btn btn-secondary"#}
+    {#                                data-dismiss="modal">Close#}
+    {#                        </button>#}
+    {#                    </div>#}
+    {#                </div>#}
+    {#            </form>#}
+    {#        </div>#}
+    {#    </div>#}
 
     <!--End Customer Won Modal -->
 

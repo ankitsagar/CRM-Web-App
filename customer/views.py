@@ -5,8 +5,10 @@ from django.views.generic.base import View
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.http import HttpResponseRedirect, Http404, JsonResponse
+from django.urls import reverse
 from django.contrib import messages
 from django.utils.decorators import method_decorator
+import datetime
 from .models import *
 from django.views.generic.base import TemplateResponseMixin, ContextMixin
 
@@ -218,8 +220,8 @@ class TaskDetailView(DetailView):
     def get_object(self, queryset=None):
         obj = super(TaskDetailView, self).get_object(queryset=queryset)
 
-        if obj.contact.added_by != self.request.user:
-            raise Http404
+        # if obj.contact.added_by != self.request.user:
+        #     raise Http404
         return obj
 
     def get_context_data(self, *args, **kwargs):
@@ -228,11 +230,34 @@ class TaskDetailView(DetailView):
         return context
 
     def post(self, *args, **kwargs):
-        status = self.request.POST.get('task_status')
-        id = self.kwargs['pk']
-        task = Task.objects.get(id=id)
-        task.task_status = status
-        task.save()
+        task_id = self.kwargs['pk']
+        task = Task.objects.get(id=task_id)
+
+        if task.task_status == 0 and (self.request.user.role == "Manager" or
+                                      self.request.user == task.task_owner):
+            status = self.request.POST.get('task_status')
+            subject = self.request.POST.get('task')
+            due_date = self.request.POST.get('due_date')
+            task_desc = self.request.POST.get('task_desc')
+            priority = self.request.POST.get('priority')
+
+            task.priority = priority
+            task.task = subject
+            task.task_description = task_desc
+            task.task_status = status
+            print(priority, status)
+            if subject and due_date:
+                task.due_date = due_date
+                task.save()
+                messages.success(self.request, "Task successfully updated",
+                                 extra_tags='success')
+            else:
+                messages.error(self.request, "Please fill the required fields",
+                               extra_tags='danger')
+        else:
+            messages.error(self.request,
+                           "You don't have access to edit this task",
+                           extra_tags='danger')
         return HttpResponseRedirect(self.request.META.get('HTTP_REFERER'))
 
 
@@ -253,62 +278,44 @@ class ContactDetail(DetailView):
 
     def get_object(self, queryset=None):
         obj = super(ContactDetail, self).get_object(queryset=None)
-
-        if obj.added_by != self.request.user:
-            raise Http404
-
         return obj
 
     def get_context_data(self, *args, **kwargs):
         context = super(ContactDetail, self).get_context_data(*args, **kwargs)
         context['contact'] = self.get_object()
+        context['users'] = User.objects.all().exclude(
+            id=self.get_object().contact_owner.id)
         return context
 
-    def post(self, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         contact_id = kwargs['pk']
         contact = Contact.objects.get(id=contact_id)
-        qualified = self.request.POST.get('qualified')
-        disqualified = self.request.POST.get('disqualified')
-        won = self.request.POST.get('won')
-        final_deal_size = self.request.POST.get('final_deal_size')
-        if qualified:
-            contact.stage = qualified
 
-        if disqualified:
-            contact.stage = disqualified
-        if won and final_deal_size:
-            contact.stage = won
-            contact.deal_size = final_deal_size
+        phone = request.POST.get('phone')
+        if phone:
+            contact.phone = phone
+        else:
+            raise Http404
 
-        contact.save()
+        zip_code = request.POST.get('postal_code')
+        if zip_code:
+            contact.zip_code = zip_code
+        else:
+            contact.zip_code = None
+
+        contact.email = request.POST.get('email')
+        contact.street = request.POST.get('street')
+        contact.city = request.POST.get('city')
+        contact.state = request.POST.get('state')
+        if request.user == contact.contact_owner or request.user.role == 'Manager':
+            messages.success(request, "Contact successfully updated",
+                             extra_tags='success')
+            contact.save()
+        else:
+            messages.error(request, "You Don't have access to this contact!",
+                           extra_tags='danger')
+
         return HttpResponseRedirect(self.request.META.get('HTTP_REFERER'))
-
-
-def update_contact_detail(request, *args, **kwargs):
-    contact_id = kwargs['pk']
-    contact = Contact.objects.get(id=contact_id)
-    phone = request.POST.get('phone')
-    if phone:
-        contact.phone = phone
-    else:
-        raise Http404
-
-    deal_size = request.POST.get('deal_size')
-    if deal_size:
-        contact.deal_size = deal_size
-    else:
-        contact.deal_size = None
-
-    contact.zip_code = request.POST.get('postal_code')
-
-    contact.email = request.POST.get('email')
-    contact.street = request.POST.get('street')
-    contact.city = request.POST.get('city')
-    contact.state = request.POST.get('state')
-
-    contact.save()
-
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 
 class Company(DetailView):
@@ -326,8 +333,100 @@ class Company(DetailView):
     def get_context_data(self, **kwargs):
         context = super(Company, self).get_context_data(**kwargs)
         context['company'] = self.get_object()
+        context['contact_set'] = self.get_object().contact_set.all()
+        context['users'] = User.objects.all()
 
         return context
+
+    def post(self, request, *args, **kwargs):
+        company_id = request.POST.get("company_id")
+
+        if company_id:
+            company = CompanyDetails.objects.get(id=company_id)
+            company_name = request.POST.get("company")
+            industry = request.POST.get("industry")
+            revenue = request.POST.get("revenue")
+            phone = request.POST.get("phone")
+            fax = request.POST.get("fax")
+            email = request.POST.get("email")
+            website = request.POST.get("website")
+            employees = request.POST.get("employees")
+            owner = request.POST.get("owner")
+            street = request.POST.get("street")
+            city = request.POST.get("city")
+            zip_code = request.POST.get("postal_code")
+            state = request.POST.get("state")
+            country = request.POST.get("country")
+
+            if request.user.role == "Manager" \
+                    or request.user == company.account_owner:
+
+                if company_name and phone and zip_code and state and city \
+                        and street and state and country and owner:
+                    company.company_name = company_name
+                    company.industry_type = industry
+
+                    if revenue:
+                        company.revenue = revenue
+                    else:
+                        company.revenue = None
+
+                    company.fax = fax
+                    company.email = email
+                    company.website = website
+                    company.state = state
+                    company.street = street
+                    company.city = city
+                    company.zip_code = zip_code
+                    company.country = country
+
+                    if employees:
+                        company.no_of_employee = employees
+                    else:
+                        company.no_of_employee = None
+
+                    owner = User.objects.get(id=owner)
+                    company.account_owner = owner
+                    company.save()
+                    messages.success(request, "Details successfully updated",
+                                     extra_tags='success')
+
+                    return HttpResponseRedirect(
+                        reverse('customer:company', kwargs={'slug': company.slug}))
+
+                else:
+                    messages.error(request, "Please fill the required fields",
+                                   extra_tags='danger')
+
+                    return HttpResponseRedirect(
+                        self.request.META.get('HTTP_REFERER'))
+
+            else:
+                messages.error(request,
+                               "You don't have access to edit these details",
+                               extra_tags='danger')
+
+                return HttpResponseRedirect(
+                    self.request.META.get('HTTP_REFERER'))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # @method_decorator(login_required, name='dispatch')
 # class AddCustomer(View):
