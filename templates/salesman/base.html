@@ -105,7 +105,7 @@
                                 <i class="nav-icon fa fa-empty"></i> Add Company</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">
+                            <a class="nav-link" href="{% url 'customer:company-list' %}">
                                 <i class="nav-icon fa fa-empty"></i> Company List</a>
                         </li>
                     </ul>
@@ -113,16 +113,16 @@
 
                 <li class="nav-item nav-dropdown">
                     <a class="nav-link nav-dropdown-toggle" href="#">
-                        <i class="nav-icon icon-user"></i> Lead</a>
+                        <i class="nav-icon icon-user"></i> Contact</a>
 
                     <ul class="nav-dropdown-items">
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'customer:add-contact' %}">
-                                <i class="nav-icon fa fa-empty"></i> Create Lead</a>
+                                <i class="nav-icon fa fa-empty"></i> Create Contact</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="nav-icon fa fa-empty"></i> Customer List</a>
+                            <a class="nav-link" href="{% url 'customer:contact-list' %}">
+                                <i class="nav-icon fa fa-empty"></i> Contact List</a>
                         </li>
                     </ul>
                 </li>
@@ -137,27 +137,11 @@
                                 <i class="nav-icon fa fa-empty"></i> Add Task</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">
+                            <a class="nav-link" href="{% url 'customer:task-list' %}">
                                 <i class="nav-icon fa fa-empty"></i> Task List</a>
                         </li>
                     </ul>
                 </li>
-
-                {#                <li class="nav-item nav-dropdown">#}
-                {#                    <a class="nav-link nav-dropdown-toggle" href="#">#}
-                {#                        <i class="nav-icon icon-user"></i> Opportunity</a>#}
-                {##}
-                {#                    <ul class="nav-dropdown-items">#}
-                {#                        <li class="nav-item">#}
-                {#                            <a class="nav-link" href="{% url 'customer:add-contact'%}?type=opportunity">#}
-                {#                                <i class="nav-icon fa fa-empty"></i> Create Opportunity</a>#}
-                {#                        </li>#}
-                {#                        <li class="nav-item">#}
-                {#                            <a class="nav-link" href="#">#}
-                {#                                <i class="nav-icon fa fa-empty"></i> Opportunity List</a>#}
-                {#                        </li>#}
-                {#                    </ul>#}
-                {#                </li>#}
 
                 <li class="nav-item">
                     <a class="nav-link" href="#">

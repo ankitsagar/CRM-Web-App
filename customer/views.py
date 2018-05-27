@@ -410,6 +410,33 @@ class Company(DetailView):
                     self.request.META.get('HTTP_REFERER'))
 
 
+def contact_list(request):
+    template = "salesman/contact-list.html"
+    contacts = Contact.objects.all()
+    context = {
+        "contacts": contacts
+    }
+    return render(request, template, context)
+
+
+def company_list(request):
+    template = "salesman/company-list.html"
+    companies = CompanyDetails.objects.all()
+    context = {
+        "companies": companies
+    }
+    return render(request, template, context)
+
+
+def task_list(request):
+    template = "salesman/task-list.html"
+    tasks = Task.objects.all()
+    context = {
+        "tasks": tasks
+    }
+    return render(request, template, context)
+
+
 
 
 
