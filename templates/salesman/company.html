@@ -1,6 +1,16 @@
 {% extends 'salesman/base.html' %}
 {% load latest_task %}
 
+{% block header %}
+    <style>
+        .badge {
+            border-radius: 2px;
+            font-weight: normal;
+        }
+    </style>
+
+{% endblock %}
+
 {% block content %}
     {% if messages %}
         {% for message in messages %}
@@ -195,6 +205,17 @@
                                 <strong> Deals</strong>
                             </div>
                             <div class="card-body">
+                                {% for deal in company.deal_set.all %}
+                                    <div class="pb-3">
+                                        <strong>{{ deal }}</strong>
+                                        <span class="badge badge-danger"
+                                              style="margin-left: 10px">
+                                        Rs.{{ deal.amount }}</span><br>
+                                        <small>{{ deal.get_stage_display }}</small>
+                                        <small style="margin-left: 10px">
+                                            {{ deal.closing_date }}</small>
+                                    </div>
+                                {% endfor %}
 
                             </div>
 

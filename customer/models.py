@@ -30,6 +30,10 @@ class CompanyDetails(models.Model):
         self.slug = slugify(self.company_name)
         super(CompanyDetails, self).save(**kwargs)
 
+    def get_address(self):
+        return "%s, %s, %s - %s" % (
+            self.street, self.city, self.state, self.zip_code)
+
     def __str__(self):
         return self.company_name
 
@@ -55,11 +59,11 @@ class Contact(models.Model):
         return "%s %s" % (self.first_name, self.last_name)
 
     def __str__(self):
-        return self.company
+        return self.company.company_name
 
     def get_address(self):
         return "%s, %s, %s - %s" % (
-        self.street, self.city, self.state, self.zip_code)
+            self.street, self.city, self.state, self.zip_code)
 
 
 STATUS = (
@@ -92,20 +96,19 @@ STAGES = (
     (2, 'Opportunity'),
     (3, 'Investigation'),
     (4, 'Presentation'),
-    (5, 'Close Won'),
-    (0, 'Close Lost'),
+    (5, 'Close (Won)'),
+    (0, 'Close (Lost)'),
 )
 
 
 class Deal(models.Model):
     deal_name = models.CharField(max_length=120)
     company = models.ForeignKey(CompanyDetails)
-    amount = models.DecimalField(max_digits=50, decimal_places=2, blank=True,
-                                 null=True)
+    amount = models.DecimalField(max_digits=50, decimal_places=2, default=0)
     closing_date = models.DateField()
     stage = models.IntegerField(choices=STAGES, default=1)
     deal_owner = models.ForeignKey(User)
     contact = models.ForeignKey(Contact, null=True)
 
     def __str__(self):
-        return self.company
+        return self.deal_name

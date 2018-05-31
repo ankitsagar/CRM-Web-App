@@ -11,8 +11,11 @@ from django.utils.decorators import method_decorator
 import datetime
 from .models import *
 from django.views.generic.base import TemplateResponseMixin, ContextMixin
+from django.views.decorators.csrf import csrf_protect
+from django.db.models import Q
 
 
+@login_required
 def add_company(request):
     if request.user.role == 'Salesman':
         template = 'salesman/add-company.html'
@@ -69,6 +72,7 @@ def add_company(request):
     return render(request, template)
 
 
+@method_decorator(login_required, name='dispatch')
 class CreateContact(TemplateResponseMixin, ContextMixin, View):
 
     def get_template_names(self):
@@ -154,6 +158,7 @@ class CreateContact(TemplateResponseMixin, ContextMixin, View):
             return JsonResponse({'message': message})
 
 
+@login_required
 def add_task(request, **kwargs):
     template = 'salesman/add-task.html'
     contacts = Contact.objects.all()
@@ -174,11 +179,17 @@ def add_task(request, **kwargs):
             contact = Contact.objects.get(phone=contact_phone)
             name = contact.get_full_name()
             company = contact.company.company_name
-            address = contact.get_address()
+            street = contact.street
+            city = contact.city
+            zip_code = contact.zip_code
+            state = contact.state
             data = {
                 'name': name,
                 'company': company,
-                'address': address,
+                'street': street,
+                'city': city,
+                'zip_code': zip_code,
+                'state': state,
             }
 
             return JsonResponse(data)
@@ -206,6 +217,77 @@ def add_task(request, **kwargs):
     return render(request, template, context)
 
 
+@method_decorator(login_required, name='dispatch')
+class DealAdd(TemplateResponseMixin, ContextMixin, View):
+    model = Deal
+
+    def get_template_names(self):
+        if self.request.user.role == 'Manager':
+            return 'manger/add-deal.html'
+        elif self.request.user.role == 'Salesman':
+            return 'salesman/add-deal.html'
+        else:
+            raise Http404
+
+    def get(self, request, *args, **kwargs):
+
+        context = self.get_context_data(**kwargs)
+        context['users'] = User.objects.all().exclude(id=request.user.id)
+        context['selected'] = User.objects.get(id=request.user.id)
+        context['companies'] = CompanyDetails.objects.all()
+
+        company_name = request.GET.get('company_name')
+        if company_name:
+            company = CompanyDetails.objects.get(company_name=company_name)
+            contact_set = company.contact_set.all()
+            contact_list = []
+
+            for contact in contact_set:
+                contact_list.append({'id': contact.id,
+                                     'name': contact.get_full_name()})
+            return JsonResponse({'list': contact_list})
+
+        company = request.GET.get('company')
+        if company:
+            company = CompanyDetails.objects.get(company_name=company)
+            address = company.get_address()
+            phone = company.phone
+            return JsonResponse({'address': address, 'phone': phone})
+
+        return render(request, self.get_template_names(), context)
+
+    def post(self, request, *args, **kwargs):
+        deal_name = request.POST.get('deal_name')
+        amount = request.POST.get('amount')
+        cl_date = request.POST.get('cl_date')
+        stage = request.POST.get('stage')
+        owner = request.POST.get('owner')
+        company = request.POST.get('company')
+        contact = request.POST.get('contact')
+        print(company, contact)
+
+        if company and deal_name and cl_date and stage and owner:
+            company = CompanyDetails.objects.get(company_name=company)
+            owner = User.objects.get(id=owner)
+            deal = Deal.objects.create(deal_name=deal_name, stage=stage,
+                                       closing_date=cl_date, deal_owner=owner,
+                                       company=company)
+            if amount:
+                deal.amount = amount
+            if contact:
+                contact = Contact.objects.get(id=contact)
+                deal.contact = contact
+
+            deal.save()
+            deal_id = deal.id
+            messages.success(request, 'Deal Successfully Created')
+            return JsonResponse({'message': 'Deal Successfully Created',
+                                 'id': deal_id})
+        else:
+            raise Http404
+
+
+@method_decorator(login_required, name='dispatch')
 class TaskDetailView(DetailView):
     model = Task
 
@@ -219,9 +301,6 @@ class TaskDetailView(DetailView):
 
     def get_object(self, queryset=None):
         obj = super(TaskDetailView, self).get_object(queryset=queryset)
-
-        # if obj.contact.added_by != self.request.user:
-        #     raise Http404
         return obj
 
     def get_context_data(self, *args, **kwargs):
@@ -261,6 +340,7 @@ class TaskDetailView(DetailView):
         return HttpResponseRedirect(self.request.META.get('HTTP_REFERER'))
 
 
+@method_decorator(login_required, name='dispatch')
 class ContactDetail(DetailView):
     model = Contact
 
@@ -318,6 +398,7 @@ class ContactDetail(DetailView):
         return HttpResponseRedirect(self.request.META.get('HTTP_REFERER'))
 
 
+@method_decorator(login_required, name='dispatch')
 class Company(DetailView):
     model = CompanyDetails
 
@@ -392,7 +473,8 @@ class Company(DetailView):
                                      extra_tags='success')
 
                     return HttpResponseRedirect(
-                        reverse('customer:company', kwargs={'slug': company.slug}))
+                        reverse('customer:company',
+                                kwargs={'slug': company.slug}))
 
                 else:
                     messages.error(request, "Please fill the required fields",
@@ -410,6 +492,74 @@ class Company(DetailView):
                     self.request.META.get('HTTP_REFERER'))
 
 
+@method_decorator(login_required, name='dispatch')
+class DealDetails(DetailView):
+    model = Deal
+
+    def get_template_names(self):
+        if self.request.user.role == 'Salesman':
+            return 'salesman/deal.html'
+        elif self.request.user.role == 'Owner':
+            return 'owner/deal.html'
+        else:
+            raise Http404
+
+    def get_context_data(self, **kwargs):
+        context = super(DealDetails, self).get_context_data(**kwargs)
+        context['deal'] = self.get_object()
+        if self.get_object().contact:
+            context['contacts'] = Contact.objects.filter(
+                company__company_name=self.get_object().company).exclude(
+                id=self.get_object().contact.id)
+        else:
+            context['contacts'] = Contact.objects.filter(
+                company__company_name=self.get_object().company)
+        return context
+
+    def post(self, request, *args, **kwargs):
+        deal_id = self.kwargs['pk']
+        deal = Deal.objects.get(id=deal_id)
+        deal_name = request.POST.get('deal_name')
+        amount = request.POST.get('amount')
+        cl_date = request.POST.get('cl_date')
+        stage = request.POST.get('stage')
+        contact = request.POST.get('contact')
+
+        if (request.user.role == 'Manager' or request.user == deal.deal_owner) \
+                and (int(deal.stage) != 0 and int(deal.stage) != 5):
+            if deal_name and cl_date and stage:
+                deal.deal_name = deal_name
+                deal.closing_date = cl_date
+                deal.stage = stage
+                if amount:
+                    deal.amount = amount
+                else:
+                    deal.amount = 0
+
+                if contact:
+                    contact = Contact.objects.get(id=contact)
+                    deal.contact = contact
+                else:
+                    deal.contact = None
+
+                deal.save()
+                messages.success(request, 'Deal updated')
+                return HttpResponseRedirect(
+                    self.request.META.get('HTTP_REFERER'))
+
+            else:
+                messages.error(request, 'Please fill the required fields!',
+                               extra_tags='danger')
+                return HttpResponseRedirect(
+                    self.request.META.get('HTTP_REFERER'))
+        else:
+            messages.error(request, "You don't have access to edit this deal!",
+                           extra_tags='danger')
+            return HttpResponseRedirect(
+                self.request.META.get('HTTP_REFERER'))
+
+
+@login_required
 def contact_list(request):
     template = "salesman/contact-list.html"
     contacts = Contact.objects.all()
@@ -419,6 +569,7 @@ def contact_list(request):
     return render(request, template, context)
 
 
+@login_required
 def company_list(request):
     template = "salesman/company-list.html"
     companies = CompanyDetails.objects.all()
@@ -428,6 +579,7 @@ def company_list(request):
     return render(request, template, context)
 
 
+@login_required
 def task_list(request):
     template = "salesman/task-list.html"
     tasks = Task.objects.all()
@@ -437,83 +589,33 @@ def task_list(request):
     return render(request, template, context)
 
 
+@login_required
+def deal_list(request):
+    template = "salesman/deal-list.html"
+    deals = Deal.objects.all().exclude(Q(stage=5) | Q(stage=0))
+    context = {
+        "deals": deals
+    }
+    return render(request, template, context)
 
 
+@login_required
+def won_deals(request):
+    template = "salesman/won-deals.html"
+    deals = Deal.objects.filter(stage=5)
+    context = {
+        "deals": deals
+    }
+    return render(request, template, context)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# @method_decorator(login_required, name='dispatch')
-# class AddCustomer(View):
-#     template_name = 'salesman/form.html'
-#
-#     def post(self, request):
-#         first_name = request.POST.get('first_name')
-#         last_name = request.POST.get('last_name')
-#         phone = request.POST.get('phone')
-#         email = request.POST.get('email')
-#         company_name = request.POST.get('company_name')
-#         street = request.POST.get('street')
-#         city = request.POST.get('city')
-#         state = request.POST.get('state')
-#         zipcode = request.POST.get('zipcode')
-#         country = request.POST.get('country')
-#         website = request.POST.get('website')
-#
-#         stage = request.POST.get('stage')
-#         deal_size = request.POST.get('deal_size')
-#         follow_up_date = request.POST.get('follow_up_date')
-#         follow_up_task = request.POST.get('follow_up_task')
-#
-#         if not first_name or not last_name or not email or not phone or not company_name or not street or not city or not state or not zipcode or not country:
-#             messages.error(request, "all fields are required")
-#             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-#
-#         if CustomerInformation.objects.filter(company_name=company_name).exists():
-#             messages.error(request, "company already exists")
-#             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-#
-#         if CustomerInformation.objects.filter(email=email).exists():
-#             messages.error(request, "email already exists")
-#             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-#
-#         if CustomerInformation.objects.filter(phone=phone).exists():
-#             messages.error(request, "phone number already exists")
-#             return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-#
-#         CustomerInformation.objects.create(first_name=first_name, last_name=last_name, phone=phone, email=email,
-#                                            company_name=company_name, added_by=request.user, street=street, city=city,
-#                                            state=state, zipcode=zipcode, country=country, website=website)
-#         company = CustomerInformation.objects.get(company_name=company_name)
-#         stat = CustomerStatus.objects.get(company_name_id=company.id)
-#
-#         if deal_size or follow_up_task or follow_up_date:
-#
-#             if stat.stage == 'Initial' and int(stat.deal_size) == 0 and stat.follow_up_task is None and stat.follow_up_date is None:
-#                 stat.stage = stage
-#                 stat.deal_size = deal_size
-#                 stat.follow_up_date = follow_up_date
-#                 stat.follow_up_task = follow_up_task
-#                 stat.save()
-#
-#             else:
-#                 CustomerStatus.objects.create(company_name=company, stage=stage, deal_size=deal_size, follow_up_date=
-#                                               follow_up_date, follow_up_task=follow_up_task)
-#         messages.success(request, "customer successfully Added")
-#
-#         return render(request, self.template_name)
-#
-#     def get(self, request):
-#         return render(request, self.template_name)
+@login_required
+def sales_team(request):
+    template = "salesman/sales-team.html"
+    users = User.objects.all()
+    for user in users:
+        print(user.date_joined)
+    context = {
+        "users": users
+    }
+    return render(request, template, context)

@@ -1,0 +1,200 @@
+{% extends 'salesman/base.html' %}
+{% load static %}
+
+{% block content %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} bg-{{ message.tags }} mb-0">
+                <!-- singular -->
+                <a class="close" data-dismiss="alert">×</a>
+                {{ message|safe }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <div class="col-sm-7 mt-4">
+            <div class="card card-accent-success">
+                <div class="card-header">
+                    <i class="fa fa-handshake-o"></i>
+                    Add Deal
+                </div>
+
+                <div class="card-body">
+                    {% if deal.stage != 0 and deal.stage != 5 %}
+                        <form method="post" class="form-group">{% csrf_token %}
+
+                            <div class="form-group">
+                                <label>Deal Name *</label>
+                                <input class="form-control" type="text"
+                                       name="deal_name"
+                                       value="{{ deal.deal_name }}" required>
+                            </div>
+
+                            <div class="form-group row">
+                                <div class="col-sm-6">
+                                    <label>Amount</label>
+                                    <input class="form-control" type="number"
+                                           name="amount"
+                                           value="{{ deal.amount }}">
+                                </div>
+                                <div class="col-sm-6">
+                                    <label>closing Date *</label>
+                                    <input class="form-control" type="date"
+                                           name="cl_date"
+                                           value="{{ deal.closing_date|date:"Y-m-d" }}"
+                                           required>
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <div class="col-sm-6">
+                                    <label>Contact</label>
+                                    <select class="form-control" name="contact">
+
+                                        {% if deal.contact %}
+                                            <option value="">--- None ---
+                                            </option>
+                                            <option selected
+                                                    value="{{ deal.contact.id }}">
+                                                {{ deal.contact.get_full_name }}</option>
+                                        {% else %}
+                                            <option selected value="">--- None
+                                                ---
+                                            </option>
+                                        {% endif %}
+
+                                        {% for contact in contacts %}
+                                            <option value="{{ contact.id }}">
+                                                {{ contact.get_full_name }}</option>
+                                        {% endfor %}
+                                    </select>
+
+                                </div>
+
+                                <div class="col-sm-6">
+                                    <label>Stage *</label>
+                                    <select class="form-control" id="stage"
+                                            name="stage" required>
+                                        <option value="{{ deal.stage }}">
+                                            {{ deal.get_stage_display }}</option>
+                                        <option value="1">Prospecting</option>
+                                        <option value="2">Opportunity</option>
+                                        <option value="3">Investigation</option>
+                                        <option value="4">Presentation</option>
+                                        <option value="5">Close (Won)</option>
+                                        <option value="0">Close (Lost)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <label></label>
+                            <button type="submit"
+                                    class="btn btn-block btn-success">
+                                Update Deal
+                            </button>
+                        </form>
+                    {% else %}
+                        <div class="form-group">
+                            <label>Deal Name</label>
+                            <input class="form-control" type="text"
+                                   value="{{ deal.deal_name }}" disabled>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-sm-6">
+                                <label>Amount</label>
+                                <input class="form-control" type="number"
+                                       value="{{ deal.amount }}" disabled>
+                            </div>
+                            <div class="col-sm-6">
+                                <label>closing Date</label>
+                                <input class="form-control" type="text"
+                                       value="{{ deal.closing_date }}"
+                                       disabled>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-6">
+                                <label>Contact</label>
+                                {% if deal.contact %}
+                                    <input type="text" disabled
+                                           class="form-control"
+                                           value="{{ deal.contact.get_full_name }}">
+                                {% else %}
+                                    <input type="text" disabled
+                                           class="form-control"
+                                           value="None">
+                                {% endif %}
+                            </div>
+
+                            <div class="col-sm-6">
+                                <label>Stage *</label>
+                                <input type="text" disabled class="form-control"
+                                       value="{{ deal.get_stage_display }}">
+
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-5 mt-4">
+            <div class="card card-accent-primary">
+                <div class="card-header">
+                    <i class="fa fa-industry"></i>
+                    Select Company
+                </div>
+                <div class="card-body">
+
+                    <table class="table table-borderless" id="company-table">
+                        <tbody>
+                        <tr>
+                            <th>Company</th>
+                            <td>: <span> {{ deal.company }}
+                            </span></td>
+                        </tr>
+                        <tr>
+                            <th>Owner</th>
+                            <td>:
+                                <span>{{ deal.deal_owner.get_full_name }}</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Phone</th>
+
+                            <td>: <span>{{ deal.company.phone }}
+                            </span></td>
+                        </tr>
+                        <tr>
+                            <th>Address</th>
+                            <td>: <span>{{ deal.company.get_address }}</span>
+                            </td>
+                        </tr>
+
+                        </tbody>
+
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+{% endblock %}
+{% block script %}
+
+    <script>
+
+        var map = {};
+        $('#stage option').each(function () {
+            if (map[this.value]) {
+                $(this).remove()
+            }
+            map[this.value] = true;
+        })
+    </script>
+
+{% endblock %}

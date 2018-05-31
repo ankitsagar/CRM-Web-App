@@ -56,7 +56,8 @@
                     <div class="row">
                         <div class="form-group col-sm-4">
                             <label>Priority</label>
-                            <input type="text" class="form-control text-black-50    "
+                            <input type="text"
+                                   class="form-control text-black-50    "
                                    value="{{ task.get_priority_display }}"
                                    disabled>
 
@@ -106,9 +107,45 @@
                             <td>: <span>{{ task.contact.phone }}</span></td>
                         </tr>
                         <tr>
-                            <th>Address</th>
-                            <td>: <span>{{ task.contact.get_address }}
-                            </span></td>
+                            <th>Street</th>
+                            <td>:
+                                {% if task.contact.street %}
+                                    <span>{{ task.contact.street }}</span>
+                                {% else %}
+                                    <span class="text-muted">Not Specified</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>City</th>
+                            <td>:
+                                {% if task.contact.city %}
+                                    <span>{{ task.contact.city }}</span>
+                                {% else %}
+                                    <span class="text-muted">Not Specified</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Zip Code</th>
+                            <td>:
+                                {% if task.contact.zip_code %}
+                                    <span>{{ task.contact.zip_code }}</span>
+                                {% else %}
+                                    <span class="text-muted">Not Specified</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th>State</th>
+                            <td>:
+                                {% if task.contact.state %}
+                                    <span>{{ task.contact.state }}</span>
+                                {% else %}
+                                    <span class="text-muted">Not Specified</span>
+                                {% endif %}
+                            </td>
                         </tr>
 
                         </tbody>
@@ -196,14 +233,10 @@
     <!-- End Task Modal -->
 
 
-
 {% endblock %}
 
 {% block script %}
     <script>
-        {#$(".select option").val(function (idx, val) {#}
-        {#    $(this).siblings("[value='" + val + "']").remove();#}
-        //}//);
 
         var map = {};
         $('.select option').each(function () {

@@ -1,0 +1,261 @@
+{% extends 'salesman/base.html' %}
+{% load static %}
+
+{% block content %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} bg-{{ message.tags }}">
+                <!-- singular -->
+                <a class="close" data-dismiss="alert">×</a>
+                {{ message|safe }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    <div class="row">
+        <div class="col-sm-7 mt-4">
+            <div class="card card-accent-success">
+                <div class="card-header">
+                    <i class="fa fa-handshake-o"></i>
+                    Add Deal
+                </div>
+
+                <div class="card-body">
+
+                    <div class="form-group">
+                        <label>Deal Name *</label>
+                        <input class="form-control" type="text" name="deal_name"
+                               id="deal-name" required>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-sm-6">
+                            <label>Amount</label>
+                            <input class="form-control" type="number"
+                                   name="amount"
+                                   id="amount">
+                        </div>
+                        <div class="col-sm-6">
+                            <label>closing Date *</label>
+                            <input class="form-control" type="date"
+                                   name="cl_date"
+                                   id="cl-date">
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-sm-6">
+                            <label>Stage *</label>
+                            <select class="form-control" id="stage"
+                                    name="stage">
+                                <option value="">-----Select------</option>
+                                <option value="1">Prospecting</option>
+                                <option value="2">Opportunity</option>
+                                <option value="3">Investigation</option>
+                                <option value="4">Presentation</option>
+                                <option value="5">Close (Won)</option>
+                                <option value="0">Close (Lost)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <label>Owner *</label>
+                            <select class="form-control" id="owner"
+                                    name="owner">
+                                <option value="{{ selected.id }}">{{ selected.get_full_name }}</option>
+                                {% for user in users %}
+                                    <option value="{{ user.id }}">{{ user.get_full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <label></label>
+                    <button class="btn btn-block btn-success" id="add-deal">
+                        Add Deal
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-5 mt-4">
+            <div class="card card-accent-primary">
+                <div class="card-header">
+                    <i class="fa fa-industry"></i>
+                    Select Company
+                </div>
+                <div class="card-body">
+
+                    <div class="form-group" id="company-selector">
+                        <label>Company *</label>
+                        <select class="form-control" id="company"
+                                name="company">
+                            <option value="">-----Select------</option>
+                            {% for company in companies %}
+                                <option value="{{ company }}">{{ company }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group" id="contact-selector">
+                        <label>Contact</label>
+                        <select class="form-control" id="contact"
+                                name="contact">
+                            <option value="">-----Select------</option>
+                        </select>
+                    </div>
+                    <table class="table table-borderless"
+                           id="company-table"></table>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" id="select-company"
+                            class="btn btn-square btn-sm btn-primary mr-2">
+                        <i class="fa fa-dot-circle-o"></i>
+                        Select
+                    </button>
+
+                    <button type="reset" id="reset-company"
+                            class="btn btn-square btn-sm btn-danger ml-2">
+                        <i class="fa fa-ban"></i>
+                        Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block script %}
+    <script>
+
+        $('#company').change(function () {
+            var company_name = $('#company').val();
+            $('#contact option').remove();
+            $.ajax({
+                type: 'GET',
+                url: "{% url 'customer:add-deal' %}",
+                data: {
+                    'company_name': company_name
+                },
+                beforeSend: function () {
+                    $('#loading').fadeIn();
+                },
+                success: function (data) {
+                    var html = "<option value=''>-----select------</option>";
+                    $.each(data.list, function (index, value) {
+                        html += '<option value="' + value.id + '">' +
+                            value.name + "</option>";
+                    });
+                    $('#contact').append(html)
+                    $('#loading').fadeOut();
+                },
+                error: function () {
+                    $('#loading').fadeOut();
+                }
+
+            });
+        });
+
+        $('#select-company').click(function () {
+            var company = $('#company').val();
+            var contact = $('#contact').val();
+
+            if (company === "") {
+                showFlashMessage('Please Select company', 'danger');
+            } else {
+                if (contact === "") {
+                    contact = "<span class='text-muted'>Not Specified</span>"
+                } else {
+                    contact = $('#contact option:selected').text()
+                }
+                $.ajax({
+                    type: 'GET',
+                    url: "{% url 'customer:add-deal' %}",
+                    data: {
+                        'company': company,
+                        'contact': contact
+                    },
+                    beforeSend: function () {
+                        $('#loading').fadeIn();
+                    },
+
+                    success: function (data) {
+                        var table = '<tr><th>Company</th><td>: <span>' + company
+                            + '</span></td></tr><tr><th>contact</th><td>: <span>'
+                            + contact + '</span></td></tr><tr><th>Phone</th>' +
+                            '<td>: <span>' + data.phone + '</span></td></tr>' +
+                            '<tr><th>Address</th><td>: <span>' + data.address +
+                            '</span></td></tr>';
+
+                        $('#company-selector').fadeOut();
+                        $('#contact-selector').fadeOut();
+                        $('#company-table').append(table);
+                        $('#select-company').fadeOut();
+                        $('#loading').fadeOut();
+                    },
+
+                    error: function () {
+                        $('#loading').fadeOut();
+                    }
+                });
+            }
+        });
+
+        $('#reset-company').click(function () {
+            $('#company-table').empty();
+            $('#company-selector').fadeIn();
+            $('#contact-selector').fadeIn();
+            $('#select-company').fadeIn();
+        });
+
+        $('#add-deal').click(function () {
+            var deal_name = $('#deal-name').val();
+            var amount = $('#amount').val();
+            var cl_date = $('#cl-date').val();
+            var stage = $('#stage').val();
+            var owner = $('#owner').val();
+
+            var company = $('#company').val();
+            var contact = $('#contact').val();
+
+            if ($('#company-table').is(':empty')) {
+                alert('Please Select Company First!');
+            }
+            else if (deal_name === '' || cl_date === '' || stage === '' || owner === '') {
+                showFlashMessage('Please fill the required fields')
+            } else {
+                $.ajax({
+                    type: 'POST',
+                    url: "{% url 'customer:add-deal' %}",
+                    data: {
+                        'deal_name': deal_name,
+                        'amount': amount,
+                        'cl_date': cl_date,
+                        'stage': stage,
+                        'owner': owner,
+                        'company': company,
+                        'contact': contact,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+
+
+                    },
+                    beforeSend: function () {
+                        $('#loading').fadeIn();
+                    },
+
+                    success: function (data) {
+                        if (data.message === 'Deal Successfully Created') {
+                            document.location = "/customer/deal/" + data.id
+                        }
+                        $('#loading').fadeOut();
+                    },
+
+                    error: function () {
+                        showFlashMessage('Some Error Occurred', 'danger');
+                        $('#loading').fadeOut();
+                    }
+
+                })
+            }
+        });
+    </script>
+{% endblock script %}

@@ -171,9 +171,13 @@
                         var table = '<tr><th>Name</th><td>: <span>' + data.name +
                             '</span></td></tr><tr><th>company</th><td>: <span>' +
                             data.company + '</span></td></tr><tr><th>Phone</th>' +
-                            '<td>: <span id="contact-phone">' + contact_phone + '</span></td></tr>' +
-                            '<tr><th>Address</th><td>: <span>' + data.address +
-                            '</span></td></tr>';
+                            '<td>: <span id="contact-phone">' + contact_phone +
+                            '</span></td></tr>' + '<tr><th>Street</th><td>: <span>'
+                            + data.street + '</span></td></tr>' + '<tr><th>City</th><td>: <span>'
+                            + data.city + '</span></td></tr>' + '<tr><th>Zip Code</th><td>: <span>'
+                            + data.zip_code + '</span></td></tr>' + '<tr><th>State</th><td>: <span>'
+                            + data.state + '</span></td></tr>';
+
                         $('#contact-selector').fadeOut();
                         $('#selector-label').fadeOut();
                         $('#contact-table').append(table);
